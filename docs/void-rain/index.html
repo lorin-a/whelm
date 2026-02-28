@@ -1043,7 +1043,7 @@
 
   let fullText = '';
   let words = [];
-  let releasedWordCount = 0;
+  let releasedUpTo = 0; // character position in fullText — stable across re-parses
   let collectedPool = new Set();
   let hasStarted = false;
   const TRAIL_DISTANCE = 2;
@@ -1281,8 +1281,7 @@
   }
 
   function getReleasedCharCount() {
-    if (releasedWordCount === 0 || words.length === 0) return 0;
-    return words[Math.min(releasedWordCount, words.length) - 1].endIdx;
+    return releasedUpTo;
   }
 
 
@@ -1323,10 +1322,12 @@
         const isTrail = gIdx < trailCharIdx;
         const w = findWordAt(gIdx);
 
-        // Characters inside a charged word that's already been rendered as pill — skip
         if (isTrail && w && w.isCharged) {
-          if (gIdx === w.startIdx) {
-            // Render inline pill for the whole charged word/phrase
+          // First visible char of this charged word — render inline pill
+          // Handles both normal case (gIdx === w.startIdx) and partial visibility
+          // (phrase merged across release boundary, so w.startIdx < relCharIdx)
+          const isVisibleStart = gIdx === w.startIdx || (w.startIdx < relCharIdx && gIdx === relCharIdx);
+          if (isVisibleStart) {
             const pill = document.createElement('span');
             pill.className = 'inline-pill';
             if (w.isStacking) pill.classList.add('stacking');
@@ -1336,8 +1337,8 @@
             frag.appendChild(pill);
             hapticCrystallize();
           }
-          // Either way, skip all chars in this charged word
-          i += (gIdx === w.startIdx) ? (w.endIdx - w.startIdx) : 1;
+          // Skip remaining chars in this charged word
+          i += isVisibleStart ? (w.endIdx - gIdx) : 1;
           continue;
         }
 
@@ -1362,9 +1363,13 @@
   // ===========================================================================
 
   function releaseTrailing() {
-    if (isReleasing) return; // guard re-entrance
-    const target = words.length - TRAIL_DISTANCE;
-    if (target <= releasedWordCount) return;
+    if (isReleasing) return;
+    const trailWordIdx = words.length - TRAIL_DISTANCE;
+    if (trailWordIdx < 0) return;
+
+    // Target char position: start of the first non-trail word
+    const targetCharPos = words[trailWordIdx].startIdx;
+    if (targetCharPos <= releasedUpTo) return; // nothing new to release
 
     isReleasing = true;
     try {
@@ -1394,21 +1399,22 @@
         });
       });
 
-      // Store context for charged words being released
+      // Store context for charged words whose end falls within the newly released range
       const sourceSnapshot = fullText;
-      for (let wi = releasedWordCount; wi < target && wi < words.length; wi++) {
-        if (words[wi] && words[wi].isCharged) {
+      const oldReleasedUpTo = releasedUpTo;
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].isCharged && words[i].endIdx > oldReleasedUpTo && words[i].endIdx <= targetCharPos) {
           storePillContext(
-            words[wi].pillLabel,
-            words[wi].isStacking,
+            words[i].pillLabel,
+            words[i].isStacking,
             sourceSnapshot,
-            words[wi].startIdx,
-            words[wi].endIdx,
+            words[i].startIdx,
+            words[i].endIdx,
           );
         }
       }
 
-      releasedWordCount = target;
+      releasedUpTo = targetCharPos;
 
       spawnRain(charData);
       playReleaseTone();
@@ -1434,10 +1440,10 @@
     isReleasing = true;
     try {
 
-      // Store per-pill context for all charged words before clearing
+      // Store context for unreleased charged words
       const sourceText = fullText;
       for (let i = 0; i < words.length; i++) {
-        if (words[i] && words[i].isCharged) {
+        if (words[i].isCharged && words[i].endIdx > releasedUpTo) {
           storePillContext(
             words[i].pillLabel,
             words[i].isStacking,
@@ -1449,7 +1455,8 @@
       }
 
       const canvasRect = voidCanvas.getBoundingClientRect();
-      const allChars = typingDisplay.querySelectorAll('.char:not(.trail)');
+      // Get ALL visible chars (trail + non-trail) for rain
+      const allChars = typingDisplay.querySelectorAll('.char');
       const charData = [];
 
       allChars.forEach(c => {
@@ -1461,10 +1468,10 @@
         });
       });
 
-      // Check for unreleased charged words
+      // Find unreleased charged words for pill drop
       const allPillsInline = [];
-      for (let i = releasedWordCount; i < words.length; i++) {
-        if (words[i].isCharged) {
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].isCharged && words[i].endIdx > releasedUpTo) {
           const inlinePill = typingDisplay.querySelector(`.inline-pill[data-start-idx="${words[i].startIdx}"]`);
           if (inlinePill) {
             const r = inlinePill.getBoundingClientRect();
@@ -1485,7 +1492,6 @@
         }
       }
 
-      releasedWordCount = words.length;
       spawnRain(charData);
       playReleaseTone();
 
@@ -1495,14 +1501,14 @@
 
       fullText = '';
       words = [];
-      releasedWordCount = 0;
+      releasedUpTo = 0;
       hiddenInput.value = '';
       renderTypingLine();
     } catch (err) {
       showError('forceReleaseAll', err);
       fullText = '';
       words = [];
-      releasedWordCount = 0;
+      releasedUpTo = 0;
       hiddenInput.value = '';
       renderTypingLine();
     } finally {
