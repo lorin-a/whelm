@@ -169,17 +169,53 @@
     transition: opacity 0.4s ease;
   }
 
-  /* ---- Falling rain chars ---- */
-  .rain-char {
+  /* ---- Rain canvas ---- */
+  .rain-canvas {
     position: absolute;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 300;
+    inset: 0;
+    z-index: 1;
     pointer-events: none;
-    will-change: transform, opacity;
-    color: var(--text);
+  }
+
+  /* ---- Sensory toggle ---- */
+  .sensory-toggle {
+    position: absolute;
+    top: 44px;
+    right: 16px;
+    z-index: 25;
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     opacity: 0;
-    z-index: 5;
+    animation: fadeIn 2.2s ease 0.3s forwards;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    color: var(--text-ghost);
+    transition: color 0.3s ease;
+  }
+
+  .sensory-toggle.active {
+    color: var(--text-soft);
+  }
+
+  .sensory-toggle svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sensory-toggle { display: none; }
   }
 
   /* ---- Falling pill ---- */
@@ -437,7 +473,12 @@
   <p class="contract">The story will fall away. The feelings will stay.</p>
 </div>
 
+<button class="sensory-toggle" id="sensoryToggle" aria-label="Enable sound and haptics" type="button">
+  <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+</button>
+
 <div class="void-canvas" id="voidCanvas">
+  <canvas class="rain-canvas" id="rainCanvas"></canvas>
   <div class="typing-area" id="typingArea">
     <div class="typing-display" id="typingDisplay">
       <span class="placeholder" id="placeholder">start typing...</span>
@@ -1285,6 +1326,7 @@
         pill.dataset.word = w.pillLabel;
         pill.dataset.startIdx = w.startIdx;
         frag.appendChild(pill);
+        hapticCrystallize();
         i += (w.endIdx - w.startIdx);
         continue;
       }
@@ -1365,6 +1407,7 @@
       releasedWordCount = target;
 
       spawnRain(charData);
+      playReleaseTone();
 
       pillsToFall.forEach((p, i) => {
         setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
@@ -1440,6 +1483,7 @@
 
       releasedWordCount = words.length;
       spawnRain(charData);
+      playReleaseTone();
 
       allPillsInline.forEach((p, i) => {
         setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
@@ -1464,8 +1508,25 @@
 
 
   // ===========================================================================
-  //  RAIN — Smooth gravity animation
+  //  RAIN — Canvas-based particle system
   // ===========================================================================
+
+  const rainCanvas = document.getElementById('rainCanvas');
+  const rainCtx = rainCanvas.getContext('2d');
+  let rainParticles = [];
+  let rainLoopRunning = false;
+  const rainTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#3d3833';
+
+  function resizeRainCanvas() {
+    const rect = voidCanvas.getBoundingClientRect();
+    rainCanvas.width = rect.width * devicePixelRatio;
+    rainCanvas.height = rect.height * devicePixelRatio;
+    rainCanvas.style.width = rect.width + 'px';
+    rainCanvas.style.height = rect.height + 'px';
+    rainCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  resizeRainCanvas();
+  window.addEventListener('resize', resizeRainCanvas);
 
   function spawnRain(charData) {
     const canvasH = voidCanvas.offsetHeight;
@@ -1473,45 +1534,175 @@
     charData.forEach((cd, i) => {
       if (cd.char.trim() === '') return;
 
-      const el = document.createElement('span');
-      el.className = 'rain-char';
-      el.textContent = cd.char;
-      el.style.left = cd.x + 'px';
-      el.style.top = cd.y + 'px';
-      voidCanvas.appendChild(el);
-
-      const delay = i * 20 + Math.random() * 50;
       const endY = canvasH - 60 - Math.random() * 40;
-      const totalFall = endY - cd.y;
-      const duration = 2000 + Math.random() * 1500;
-      const xDrift = -15 + Math.random() * 30;
-      const rotation = -10 + Math.random() * 20;
-      let startTime = null;
+      rainParticles.push({
+        char: cd.char,
+        x: cd.x,
+        y: cd.y,
+        totalFall: endY - cd.y,
+        xDrift: -15 + Math.random() * 30,
+        rotation: -10 + Math.random() * 20,
+        delay: i * 20 + Math.random() * 50,
+        duration: 2000 + Math.random() * 1500,
+        startTime: null,
+      });
+    });
 
-      function fall(now) {
-        if (!startTime) startTime = now + delay;
-        if (now < startTime) { requestAnimationFrame(fall); return; }
+    if (!rainLoopRunning && rainParticles.length > 0) {
+      rainLoopRunning = true;
+      requestAnimationFrame(animateRain);
+    }
+  }
 
-        const elapsed = now - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const eased = Math.pow(t, 1.6);
+  function animateRain(now) {
+    const w = rainCanvas.width / devicePixelRatio;
+    const h = rainCanvas.height / devicePixelRatio;
+    rainCtx.clearRect(0, 0, w, h);
+    rainCtx.font = '300 16px DM Sans, sans-serif';
+    rainCtx.textAlign = 'center';
+    rainCtx.textBaseline = 'middle';
 
-        let opacity;
-        if (t < 0.06) opacity = t / 0.06 * 0.5;
-        else if (t < 0.6) opacity = 0.5 - t * 0.15;
-        else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
+    let alive = 0;
+    for (let i = rainParticles.length - 1; i >= 0; i--) {
+      const p = rainParticles[i];
+      if (!p.startTime) p.startTime = now + p.delay;
+      if (now < p.startTime) { alive++; continue; }
 
-        el.style.transform = `translate(${eased * xDrift}px, ${eased * totalFall}px) rotate(${eased * rotation}deg)`;
-        el.style.opacity = Math.max(0, opacity);
-        if (t > 0.65) el.style.filter = `blur(${(t - 0.65) * 3}px)`;
+      const elapsed = now - p.startTime;
+      const t = Math.min(elapsed / p.duration, 1);
 
-        if (t < 1) requestAnimationFrame(fall);
-        else el.remove();
+      if (t >= 1) {
+        rainParticles.splice(i, 1);
+        continue;
       }
 
-      requestAnimationFrame(fall);
-    });
+      alive++;
+      const eased = Math.pow(t, 1.6);
+
+      let opacity;
+      if (t < 0.06) opacity = t / 0.06 * 0.5;
+      else if (t < 0.6) opacity = 0.5 - t * 0.15;
+      else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
+
+      opacity = Math.max(0, opacity);
+      if (opacity <= 0) continue;
+
+      const cx = p.x + eased * p.xDrift;
+      const cy = p.y + eased * p.totalFall;
+      const rot = eased * p.rotation * Math.PI / 180;
+
+      rainCtx.save();
+      rainCtx.globalAlpha = opacity;
+      rainCtx.translate(cx, cy);
+      rainCtx.rotate(rot);
+
+      // Blur in final 35% — use filter where supported, else just fade
+      if (t > 0.65) {
+        const blurAmt = (t - 0.65) * 3;
+        try { rainCtx.filter = 'blur(' + blurAmt + 'px)'; } catch (e) {}
+      }
+
+      rainCtx.fillStyle = rainTextColor;
+      rainCtx.fillText(p.char, 0, 0);
+      rainCtx.restore();
+    }
+
+    if (alive > 0) {
+      requestAnimationFrame(animateRain);
+    } else {
+      rainLoopRunning = false;
+    }
   }
+
+
+  // ===========================================================================
+  //  WEB AUDIO — Oscillator-based tones
+  // ===========================================================================
+
+  let audioCtx = null;
+  let sensoryEnabled = false;
+
+  function initAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.warn('Web Audio not available:', e);
+    }
+  }
+
+  function playReleaseTone() {
+    if (!sensoryEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.02);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch (e) {}
+  }
+
+  function playSettleTone(isStacking) {
+    if (!sensoryEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      const freq = isStacking ? 300 : (400 + Math.random() * 200);
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 0.01);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch (e) {}
+  }
+
+
+  // ===========================================================================
+  //  HAPTICS
+  // ===========================================================================
+
+  function hapticCrystallize() {
+    if (!sensoryEnabled) return;
+    try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
+  }
+
+  function hapticSettle() {
+    if (!sensoryEnabled) return;
+    try { navigator.vibrate && navigator.vibrate([8, 30, 8]); } catch (e) {}
+  }
+
+
+  // ===========================================================================
+  //  SENSORY TOGGLE
+  // ===========================================================================
+
+  const sensoryToggle = document.getElementById('sensoryToggle');
+  // SVG paths for on/off states
+  const svgOff = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+  const svgOn = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
+
+  sensoryToggle.addEventListener('click', () => {
+    sensoryEnabled = !sensoryEnabled;
+    sensoryToggle.classList.toggle('active', sensoryEnabled);
+    sensoryToggle.querySelector('svg').innerHTML = sensoryEnabled ? svgOn : svgOff;
+    sensoryToggle.setAttribute('aria-label', sensoryEnabled ? 'Disable sound and haptics' : 'Enable sound and haptics');
+
+    if (sensoryEnabled) {
+      initAudio();
+      // Confirmation feedback
+      playSettleTone(false);
+      try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
+    }
+  });
 
 
   // ===========================================================================
@@ -1583,7 +1774,7 @@
       const xE = t * t * (3 - 2 * t);
       flyPill.style.transform = `translate(calc(-50% + ${xE * driftX}px), calc(-50% + ${yE * driftY}px)) rotate(${rotate * t}deg)`;
       if (t < 1) { requestAnimationFrame(fall); }
-      else { poolPill.style.opacity = '1'; flyPill.remove(); }
+      else { poolPill.style.opacity = '1'; flyPill.remove(); playSettleTone(isStacking); hapticSettle(); }
     }
     requestAnimationFrame(fall);
   }
