@@ -1051,7 +1051,11 @@
   // Transcript store — per-pill context snapshots
   const pillContextStore = [];
 
+  const MAX_CONTEXT_ENTRIES = 200;
   function storePillContext(pillLabel, isStacking, sourceText, charStart, charEnd) {
+    if (pillContextStore.length >= MAX_CONTEXT_ENTRIES) {
+      pillContextStore.splice(0, pillContextStore.length - MAX_CONTEXT_ENTRIES + 1);
+    }
     pillContextStore.push({ pillLabel, isStacking, sourceText, charStart, charEnd });
   }
 
@@ -1261,16 +1265,17 @@
 
 
   // ===========================================================================
-  //  WORD LOOKUP — Build index for O(1) char→word mapping (PERF FIX)
+  //  WORD LOOKUP — Binary search for char→word mapping
   // ===========================================================================
 
-  // Build a sparse index: for each word, record its range
-  // Then findWordAt uses binary search or simple iteration (words are sorted)
   function findWordAt(idx) {
-    // Words are sorted by startIdx, so we can exit early
-    for (let i = 0; i < words.length; i++) {
-      if (words[i].startIdx > idx) return null;
-      if (idx >= words[i].startIdx && idx < words[i].endIdx) return words[i];
+    let lo = 0, hi = words.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const w = words[mid];
+      if (idx < w.startIdx) hi = mid - 1;
+      else if (idx >= w.endIdx) lo = mid + 1;
+      else return w;
     }
     return null;
   }
@@ -1286,70 +1291,69 @@
   // ===========================================================================
 
   function renderTypingLine() {
-    while (typingDisplay.firstChild && typingDisplay.firstChild !== cursorEl) {
-      typingDisplay.removeChild(typingDisplay.firstChild);
-    }
-
-    if (fullText.length === 0 && !hasStarted) {
-      typingDisplay.insertBefore(placeholder, cursorEl);
-      placeholder.style.opacity = '1';
-      return;
-    }
-
-    placeholder.style.opacity = '0';
-    if (placeholder.parentNode === typingDisplay) typingDisplay.removeChild(placeholder);
-
-    const relCharIdx = getReleasedCharCount();
-    const visText = fullText.slice(relCharIdx);
-
-    // Trail boundary
-    const trailWordIdx = words.length - TRAIL_DISTANCE;
-    let trailCharIdx = 0;
-    if (trailWordIdx >= 0 && trailWordIdx < words.length) {
-      trailCharIdx = words[trailWordIdx].startIdx;
-    }
-
-    const frag = document.createDocumentFragment();
-    let i = 0;
-
-    while (i < visText.length) {
-      const gIdx = relCharIdx + i;
-      const isTrail = gIdx < trailCharIdx;
-      const w = findWordAt(gIdx);
-
-      // Start of a charged word/phrase in the trail zone → render as inline pill
-      if (isTrail && w && w.isCharged && gIdx === w.startIdx) {
-        const pill = document.createElement('span');
-        pill.className = 'inline-pill';
-        if (w.isStacking) pill.classList.add('stacking');
-        pill.textContent = w.pillLabel;
-        pill.dataset.word = w.pillLabel;
-        pill.dataset.startIdx = w.startIdx;
-        frag.appendChild(pill);
-        hapticCrystallize();
-        i += (w.endIdx - w.startIdx);
-        continue;
+    try {
+      while (typingDisplay.firstChild && typingDisplay.firstChild !== cursorEl) {
+        typingDisplay.removeChild(typingDisplay.firstChild);
       }
 
-      // Regular character
-      const span = document.createElement('span');
-      span.className = 'char';
-      span.textContent = visText[i];
+      if (fullText.length === 0 && !hasStarted) {
+        typingDisplay.insertBefore(placeholder, cursorEl);
+        placeholder.style.opacity = '1';
+        return;
+      }
 
-      if (isTrail) {
-        // Skip chars that are part of a charged word already rendered as pill
-        if (w && w.isCharged) {
-          i++;
+      placeholder.style.opacity = '0';
+      if (placeholder.parentNode === typingDisplay) typingDisplay.removeChild(placeholder);
+
+      const relCharIdx = getReleasedCharCount();
+      const visText = fullText.slice(relCharIdx);
+
+      // Trail boundary
+      const trailWordIdx = words.length - TRAIL_DISTANCE;
+      let trailCharIdx = 0;
+      if (trailWordIdx >= 0 && trailWordIdx < words.length) {
+        trailCharIdx = words[trailWordIdx].startIdx;
+      }
+
+      const frag = document.createDocumentFragment();
+      let i = 0;
+
+      while (i < visText.length) {
+        const gIdx = relCharIdx + i;
+        const isTrail = gIdx < trailCharIdx;
+        const w = findWordAt(gIdx);
+
+        // Characters inside a charged word that's already been rendered as pill — skip
+        if (isTrail && w && w.isCharged) {
+          if (gIdx === w.startIdx) {
+            // Render inline pill for the whole charged word/phrase
+            const pill = document.createElement('span');
+            pill.className = 'inline-pill';
+            if (w.isStacking) pill.classList.add('stacking');
+            pill.textContent = w.pillLabel;
+            pill.dataset.word = w.pillLabel;
+            pill.dataset.startIdx = w.startIdx;
+            frag.appendChild(pill);
+            hapticCrystallize();
+          }
+          // Either way, skip all chars in this charged word
+          i += (gIdx === w.startIdx) ? (w.endIdx - w.startIdx) : 1;
           continue;
         }
-        span.classList.add('trail');
+
+        // Regular character
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = visText[i];
+        if (isTrail) span.classList.add('trail');
+        frag.appendChild(span);
+        i++;
       }
 
-      frag.appendChild(span);
-      i++;
+      typingDisplay.insertBefore(frag, cursorEl);
+    } catch (err) {
+      showError('renderTypingLine', err);
     }
-
-    typingDisplay.insertBefore(frag, cursorEl);
   }
 
 
@@ -1425,10 +1429,10 @@
   // ===========================================================================
 
   function forceReleaseAll() {
+    if (fullText.trim().length === 0) return;
+    if (isReleasing) return; // guard — must be BEFORE try so finally doesn't clobber
+    isReleasing = true;
     try {
-      if (fullText.trim().length === 0) return;
-      if (isReleasing) return; // guard
-      isReleasing = true;
 
       // Store per-pill context for all charged words before clearing
       const sourceText = fullText;
@@ -1514,25 +1518,37 @@
   const rainCanvas = document.getElementById('rainCanvas');
   const rainCtx = rainCanvas.getContext('2d');
   let rainParticles = [];
+  let rainAlive = 0; // live particle count (avoids scanning array)
   let rainLoopRunning = false;
   const rainTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#3d3833';
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function resizeRainCanvas() {
     const rect = voidCanvas.getBoundingClientRect();
-    rainCanvas.width = rect.width * devicePixelRatio;
-    rainCanvas.height = rect.height * devicePixelRatio;
+    const dpr = devicePixelRatio || 1;
+    rainCanvas.width = rect.width * dpr;
+    rainCanvas.height = rect.height * dpr;
     rainCanvas.style.width = rect.width + 'px';
     rainCanvas.style.height = rect.height + 'px';
-    rainCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    rainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Set font once here — survives until next resize resets the transform
+    rainCtx.font = '300 16px "DM Sans", sans-serif';
+    rainCtx.textAlign = 'center';
+    rainCtx.textBaseline = 'middle';
   }
   resizeRainCanvas();
   window.addEventListener('resize', resizeRainCanvas);
 
   function spawnRain(charData) {
-    const canvasH = voidCanvas.offsetHeight;
+    // Reduced motion: skip rain entirely — text just disappears (the contract)
+    if (prefersReducedMotion.matches) return;
 
-    charData.forEach((cd, i) => {
-      if (cd.char.trim() === '') return;
+    const canvasH = voidCanvas.offsetHeight;
+    let delayIdx = 0;
+
+    for (let i = 0; i < charData.length; i++) {
+      const cd = charData[i];
+      if (cd.char.trim() === '') continue;
 
       const endY = canvasH - 60 - Math.random() * 40;
       rainParticles.push({
@@ -1542,49 +1558,49 @@
         totalFall: endY - cd.y,
         xDrift: -15 + Math.random() * 30,
         rotation: -10 + Math.random() * 20,
-        delay: i * 20 + Math.random() * 50,
+        delay: delayIdx * 20 + Math.random() * 50,
         duration: 2000 + Math.random() * 1500,
-        startTime: null,
+        startTime: 0, // 0 = not yet initialized
+        dead: false,
       });
-    });
+      delayIdx++;
+    }
 
-    if (!rainLoopRunning && rainParticles.length > 0) {
+    rainAlive = rainParticles.length;
+    if (!rainLoopRunning && rainAlive > 0) {
       rainLoopRunning = true;
       requestAnimationFrame(animateRain);
     }
   }
 
   function animateRain(now) {
-    const w = rainCanvas.width / devicePixelRatio;
-    const h = rainCanvas.height / devicePixelRatio;
-    rainCtx.clearRect(0, 0, w, h);
-    rainCtx.font = '300 16px DM Sans, sans-serif';
-    rainCtx.textAlign = 'center';
-    rainCtx.textBaseline = 'middle';
+    const dpr = devicePixelRatio || 1;
+    const cw = rainCanvas.width / dpr;
+    const ch = rainCanvas.height / dpr;
+    rainCtx.clearRect(0, 0, cw, ch);
 
     let alive = 0;
-    for (let i = rainParticles.length - 1; i >= 0; i--) {
+    for (let i = 0; i < rainParticles.length; i++) {
       const p = rainParticles[i];
-      if (!p.startTime) p.startTime = now + p.delay;
+      if (p.dead) continue;
+
+      if (p.startTime === 0) p.startTime = now + p.delay;
       if (now < p.startTime) { alive++; continue; }
 
       const elapsed = now - p.startTime;
       const t = Math.min(elapsed / p.duration, 1);
 
-      if (t >= 1) {
-        rainParticles.splice(i, 1);
-        continue;
-      }
+      if (t >= 1) { p.dead = true; continue; }
 
       alive++;
       const eased = Math.pow(t, 1.6);
 
+      // 3-phase opacity: fade in → slow fade → fade out (no blur — opacity only)
       let opacity;
       if (t < 0.06) opacity = t / 0.06 * 0.5;
       else if (t < 0.6) opacity = 0.5 - t * 0.15;
       else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
 
-      opacity = Math.max(0, opacity);
       if (opacity <= 0) continue;
 
       const cx = p.x + eased * p.xDrift;
@@ -1595,13 +1611,6 @@
       rainCtx.globalAlpha = opacity;
       rainCtx.translate(cx, cy);
       rainCtx.rotate(rot);
-
-      // Blur in final 35% — use filter where supported, else just fade
-      if (t > 0.65) {
-        const blurAmt = (t - 0.65) * 3;
-        try { rainCtx.filter = 'blur(' + blurAmt + 'px)'; } catch (e) {}
-      }
-
       rainCtx.fillStyle = rainTextColor;
       rainCtx.fillText(p.char, 0, 0);
       rainCtx.restore();
@@ -1610,6 +1619,8 @@
     if (alive > 0) {
       requestAnimationFrame(animateRain);
     } else {
+      // Compact: clear dead particles
+      rainParticles.length = 0;
       rainLoopRunning = false;
     }
   }
@@ -1634,34 +1645,36 @@
   function playReleaseTone() {
     if (!sensoryEnabled || !audioCtx) return;
     try {
+      const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.3);
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.02);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.exponentialRampToValueAtTime(180, t + 0.3);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.03, t + 0.02);
+      gain.gain.linearRampToValueAtTime(0, t + 0.3);
       osc.connect(gain).connect(audioCtx.destination);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.start(t);
+      osc.stop(t + 0.35);
     } catch (e) {}
   }
 
   function playSettleTone(isStacking) {
     if (!sensoryEnabled || !audioCtx) return;
     try {
+      const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
       const freq = isStacking ? 300 : (400 + Math.random() * 200);
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 0.01);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.025, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0, t + 0.15);
       osc.connect(gain).connect(audioCtx.destination);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.15);
+      osc.start(t);
+      osc.stop(t + 0.2);
     } catch (e) {}
   }
 
@@ -1670,8 +1683,12 @@
   //  HAPTICS
   // ===========================================================================
 
+  let lastCrystallizeTime = 0;
   function hapticCrystallize() {
     if (!sensoryEnabled) return;
+    const now = performance.now();
+    if (now - lastCrystallizeTime < 300) return;
+    lastCrystallizeTime = now;
     try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
   }
 
@@ -1686,7 +1703,6 @@
   // ===========================================================================
 
   const sensoryToggle = document.getElementById('sensoryToggle');
-  // SVG paths for on/off states
   const svgOff = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
   const svgOn = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
 
@@ -1698,10 +1714,11 @@
 
     if (sensoryEnabled) {
       initAudio();
-      // Confirmation feedback
       playSettleTone(false);
       try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
     }
+    // Refocus hidden input so typing isn't interrupted
+    hiddenInput.focus();
   });
 
 
@@ -1900,10 +1917,10 @@
     activePillDepth = 0;
   }
 
+  const _escDiv = document.createElement('div');
   function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    _escDiv.textContent = str;
+    return _escDiv.innerHTML;
   }
 
   function truncateGently(str, maxLen) {
