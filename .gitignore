@@ -1,0 +1,8 @@
+node_modules/
+Misc/
+.DS_Store
+build/
+Nunito_Complete/
+magilio-font/
+feroniapi-main/
+elm-clean

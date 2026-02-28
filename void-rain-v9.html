@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Void — Rain</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #f5f0eb;
+    --text: #3d3833;
+    --text-soft: #6b6158;
+    --text-faint: #968d84;
+    --text-ghost: #d4ccc4;
+    --linger: #5c4f6b;
+    --linger-border: rgba(92, 79, 107, 0.3);
+    --linger-bg: rgba(92, 79, 107, 0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* ---- Framing ---- */
+  .framing {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 44px 24px 14px;
+    text-align: center;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    animation: fadeIn 2.2s ease 0.3s forwards;
+  }
+
+  .framing p {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: var(--text-soft);
+  }
+
+  .framing .instruction {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .framing .contract {
+    margin-top: 6px;
+    font-style: italic;
+    color: var(--text-faint);
+    font-size: 14px;
+  }
+
+  .framing.dimmed {
+    animation: none;
+    transition: opacity 2s ease;
+    opacity: 0.55;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- Canvas ---- */
+  .void-canvas {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    cursor: text;
+  }
+
+  /* ---- Typing area: centered ---- */
+  .typing-area {
+    position: absolute;
+    top: 210px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    width: 90%;
+    max-width: 460px;
+    text-align: center;
+    cursor: text;
+  }
+
+  .typing-display {
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--text);
+    min-height: 30px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    position: relative;
+    display: inline;
+  }
+
+  .typing-display .char {
+    display: inline;
+    transition: color 0.4s ease, opacity 0.4s ease;
+  }
+
+  .typing-display .char.trail {
+    color: var(--text-ghost);
+    opacity: 0.35;
+    transition: color 0.25s ease, opacity 0.25s ease;
+  }
+
+  /* Charged words in trail: style as pill inline */
+  .typing-display .inline-pill {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 2px 10px;
+    border-radius: 14px;
+    letter-spacing: 0.02em;
+    margin: 0 2px;
+    vertical-align: baseline;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .typing-display .inline-pill.stacking {
+    color: var(--text-faint);
+    background: rgba(61, 56, 51, 0.04);
+    border-color: rgba(61, 56, 51, 0.15);
+    font-weight: 500;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 1.5px;
+    height: 1.15em;
+    background: var(--text-soft);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: blink 1.1s ease infinite;
+  }
+
+  @keyframes blink {
+    0%, 45% { opacity: 1; }
+    55%, 100% { opacity: 0; }
+  }
+
+  .placeholder {
+    color: var(--text-faint);
+    font-weight: 300;
+    font-size: 17px;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  /* ---- Falling rain chars ---- */
+  .rain-char {
+    position: absolute;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    pointer-events: none;
+    will-change: transform, opacity;
+    color: var(--text);
+    opacity: 0;
+    z-index: 5;
+  }
+
+  /* ---- Falling pill ---- */
+  .falling-pill {
+    position: absolute;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 4px 13px;
+    border-radius: 16px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform, opacity;
+    z-index: 9;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ---- Pill pile ---- */
+  .pill-pool {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+    overflow: visible;
+  }
+
+  .pill-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    overflow: visible;
+    position: relative;
+  }
+
+  .pill {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 5px 15px;
+    border-radius: 20px;
+    white-space: nowrap;
+    pointer-events: auto;
+    cursor: default;
+    opacity: 0;
+    will-change: transform, opacity;
+    letter-spacing: 0.025em;
+    position: relative;
+    transform: rotate(var(--pill-rotate, 0deg)) translateX(var(--pill-nudge, 0px)) translateY(0);
+    transition: transform 0.5s cubic-bezier(0.25, 0, 0.15, 1),
+                background 0.3s ease,
+                border-color 0.3s ease;
+  }
+
+  .pill.stacking-pill {
+    color: var(--text-faint);
+    background: rgba(61, 56, 51, 0.04);
+    border-color: rgba(61, 56, 51, 0.15);
+    font-weight: 500;
+    padding: 5px 10px;
+    font-size: 14px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .pill.arriving {
+    animation: pillArrive 0.8s cubic-bezier(0.25, 0, 0.15, 1) forwards;
+    animation-delay: var(--pill-delay, 0s);
+  }
+
+  .pill.tappable {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .pill.active {
+    z-index: 30;
+    background: rgba(92, 79, 107, 0.08);
+    border-color: rgba(92, 79, 107, 0.45);
+    transform: rotate(0deg) translateX(0px) translateY(-28px);
+    animation: none;
+  }
+
+  /* Context reveal */
+  .pill-context {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 29;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    width: max-content;
+    max-width: min(260px, 80vw);
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.45s cubic-bezier(0.25, 0, 0.15, 1),
+                max-height 0.55s cubic-bezier(0.25, 0, 0.15, 1),
+                max-width 0.55s cubic-bezier(0.25, 0, 0.15, 1);
+  }
+
+  .pill-context.visible {
+    opacity: 1;
+    max-height: 80px;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .pill-context.depth-1 {
+    max-width: min(360px, 85vw);
+    max-height: 160px;
+  }
+
+  .pill-context.depth-2 {
+    max-width: min(400px, 90vw);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .pill-context-inner {
+    padding: 10px 16px 12px;
+    background: rgba(245, 240, 235, 0.92);
+    border: 1px solid rgba(92, 79, 107, 0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: contextFadeIn 0.35s ease forwards;
+  }
+
+  @keyframes contextFadeIn {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+  }
+
+  .pill-context .context-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--text-faint);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .pill-context .context-text .context-highlight {
+    color: var(--linger);
+    font-weight: 400;
+  }
+
+  .pill-context .tangle-side {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text-faint);
+    padding: 4px 0;
+  }
+
+  .pill-context .tangle-divider {
+    font-size: 12px;
+    color: var(--text-ghost);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    padding: 2px 0;
+  }
+
+  .pill-context .depth-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+
+  .pill-context .depth-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-ghost);
+    transition: background 0.3s ease;
+  }
+
+  .pill-context .depth-dot.active {
+    background: var(--linger);
+  }
+
+  @keyframes pillArrive {
+    0% { opacity: 0; transform: rotate(var(--pill-rotate, 0deg)) translateX(var(--pill-nudge, 0px)) translateY(-6px) scale(0.95); }
+    100% { opacity: 1; transform: rotate(var(--pill-rotate, 0deg)) translateX(var(--pill-nudge, 0px)) translateY(0) scale(1); }
+  }
+
+  .hidden-input {
+    position: fixed;
+    left: -9999px;
+    top: -9999px;
+    opacity: 0;
+    font-size: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .framing { padding-top: 38px; }
+    .typing-area { top: 200px; width: 88%; }
+    .pill-pool { bottom: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.15s !important;
+    }
+  }
+
+  /* Debug error indicator */
+  .error-flag {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #c44;
+    background: rgba(255,240,240,0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+    z-index: 999;
+    max-width: 280px;
+    word-break: break-word;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .error-flag.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="error-flag" id="errorFlag"></div>
+
+<div class="framing" id="framing">
+  <p class="instruction">Let your thoughts move through you.</p>
+  <p class="contract">The story will fall away. The feelings will stay.</p>
+</div>
+
+<div class="void-canvas" id="voidCanvas">
+  <div class="typing-area" id="typingArea">
+    <div class="typing-display" id="typingDisplay">
+      <span class="placeholder" id="placeholder">start typing...</span>
+      <span class="cursor-blink" id="cursor"></span>
+    </div>
+  </div>
+  <div class="pill-pool" id="pillPool"></div>
+</div>
+
+<textarea class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
+
+<script>
+(function() {
+
+  // ---- Debug helper ----
+  const errorFlag = document.getElementById('errorFlag');
+  function showError(context, err) {
+    console.error(context, err);
+    errorFlag.textContent = context + ': ' + (err.message || err);
+    errorFlag.classList.add('visible');
+    setTimeout(() => errorFlag.classList.remove('visible'), 8000);
+  }
+
+  // ===========================================================================
+  //  WORD PARSING ENGINE — Categories from the Perception Engine ruleset
+  // ===========================================================================
+
+  // ---- Cat 1A: Self-judgment adjectives + Cat 6 embodied + Cat 8B echoed ----
+  const ADJECTIVES = new Set([
+    'afraid','angry','anxious','ashamed','awful','bad','bitter','broken',
+    'burned','careless','clingy','cold','confused','controlling','crazy',
+    'cruel','crushed','damaged','defeated','defective','desperate',
+    'devastated','disappointed','disgusted','disgusting','disposable',
+    'dramatic','drained','dumb','embarrassed','empty','evil','exhausted',
+    'flawed','fragile','frightened','frustrated','furious','guilty',
+    'gutted','hateful','heartbroken','heavy','helpless','hollow',
+    'hopeless','horrible','humiliated','hurt','hypersensitive',
+    'inadequate','incompetent','insane','insecure','invisible','irrational',
+    'isolated','jealous','lazy','lonely','lost','mean',
+    'miserable','needy','numb','obsessive','oversensitive',
+    'overwhelmed','panicked','paralyzed','pathetic','petty',
+    'powerless','rejected','replaceable','resentful',
+    'restless','ruined','sad','scared','selfish','shattered',
+    'shocked','sick','small','smothered','spinning','stuck','stupid',
+    'suffocated','terrified','tired','toxic',
+    'trapped','ugly','uncertain','uncomfortable','undeserving','unfair',
+    'ungrateful','unlovable','unloved','unworthy','upset','useless',
+    'vulnerable','weak','weary','worried','worse','worst','worthless',
+    'wounded','wrong',
+    // Cat 8B: echoed / accusation language
+    'sensitive','emotional','intense','difficult','demanding','aggressive',
+    'passive','dependent','detached','distant','guarded','rigid',
+    'naive','gullible','reckless','impulsive','cautious',
+    'critical','judgmental','negative','pessimistic','defensive',
+    'submissive','manipulative','possessive',
+    'irritable','moody','unstable','erratic','unpredictable',
+    'hysterical','overdramatic','thin-skinned',
+    'high-maintenance','picky','annoying','unbearable',
+    'intolerable','mediocre','boring','forgettable',
+    'exhausting','impossible','unreasonable',
+    // Cat 6: metaphorical / embodied
+    'frozen','scattered','unmoored','adrift','buried','raw','exposed',
+    'cracked','foggy','cloudy','dim','dark',
+    'turbulent','flooded','overflowing','electric','buzzing',
+  ]);
+
+  // ---- Cat 1C: Identity nouns / metaphors for self ----
+  const IDENTITY_NOUNS = new Set([
+    'baby','burden','catastrophe','child','coward','disaster','doormat',
+    'embarrassment','failure','fake','fraud','ghost','idiot','impostor',
+    'joke','liar','liability','loser','mess','monster','nobody','nothing',
+    'nuisance','outcast','outsider','people-pleaser','perfectionist',
+    'problem','pushover','quitter','robot','screw-up','screwup','shell',
+    'stranger','victim','villain','waste','wreck',
+    'placeholder','object','machine','shadow',
+    'black-hole','zombie','puppet','punching-bag',
+  ]);
+
+  // ---- Cat 3: Absolutist / scope / permanence + Cat 10 ----
+  const INTENSIFIERS = new Set([
+    'absolutely','always','completely','constantly','definitely','endlessly',
+    'entirely','every','everybody','everyone','everything','everywhere',
+    'forever','fully','impossible','inevitably','must','never','nobody',
+    'none','nothing','only','permanently','should','totally','utterly',
+    'irreversible','permanent','ruined','destroyed','wasted',
+  ]);
+
+  // ---- Cat 1B: Identity verbs + Cat 6 embodied verbs ----
+  const IDENTITY_VERBS = new Set([
+    'abandoned','begging','betrayed','breaking','choking','clenching',
+    'clinging','collapsing','crumbling','crying','destroying','discarded',
+    'dismissed','dissociating','drowning','dying','echoing','escaping',
+    'failing','falling','fighting','fleeing','forgotten','freezing',
+    'hiding','hurting','ignoring','losing','lying','manipulating',
+    'neglected','overreacting','performing','pleading','pretending',
+    'protecting','punishing','pushing','quitting','raging','replacing',
+    'running','ruining','sabotaging','screaming','self-destructing',
+    'shaking','shrinking','silenced','sinking','spiraling','splitting',
+    'struggling','suffering','suffocating','surviving','trembling',
+    'triggering','unraveling','withdrawing',
+    'floating','carrying','crushing',
+    'burning','boiling','flooding',
+  ]);
+
+  // ---- Additional single charged words across categories ----
+  const EXTRA_CHARGED = new Set([
+    // emotional verbs
+    'hate','hating','dread','dreading','resent','regret','regretting',
+    // body states (Cat 6)
+    'nauseous','tight','tense','aching','throbbing',
+    // relational (Cat 13)
+    'used','unwanted','unheard','unseen',
+    // self-blame
+    'deserve','fault','blame',
+    // Cat 8A: clinical / echoed
+    'codependent','narcissistic','triggered','dysregulated',
+    'hypervigilant','avoidant','enmeshed',
+    // Cat 5B: loaded minimizers
+    'fine','whatever','overreacting','ridiculous','silly',
+    // Cat 6: spatial / metaphorical standalone
+    'stuck','trapped','lost','drowning','sinking',
+    'heavy','crushing','suffocating','buried','waves',
+    'fog','darkness','armor','walls','pressure',
+    'underwater','numb','drained','raw','exposed','hollow',
+    // Core emotions
+    'shame','grief','rage','terror','panic','despair','agony',
+    'anguish','envy','contempt','disgust','longing',
+    'yearning','sorrow','remorse','bitterness',
+  ]);
+
+  // Unified check: is this single word in any charged set?
+  function isChargedWord(word) {
+    const c = word.toLowerCase().replace(/[^a-z'-]/g, '');
+    if (c.length < 2) return false;
+    return ADJECTIVES.has(c) || IDENTITY_NOUNS.has(c) ||
+           INTENSIFIERS.has(c) || IDENTITY_VERBS.has(c) ||
+           EXTRA_CHARGED.has(c);
+  }
+
+  // Helper: is this word an emotion-type word? (for compound patterns)
+  function isEmotionWord(w) {
+    return ADJECTIVES.has(w) || EXTRA_CHARGED.has(w) || IDENTITY_VERBS.has(w) || IDENTITY_NOUNS.has(w);
+  }
+
+  // ---- Cat 9: Connectors that signal stacking / conflation ----
+  const STACKING_SINGLE = new Set([
+    'but','yet','except','although','though','however',
+  ]);
+  const STACKING_PHRASES = [
+    'then again','on top of that','not to mention',
+    'but also','but then','let alone','even though','despite',
+  ];
+
+  // ---- Multi-word stacking connector check ----
+  // PERF FIX: accept pre-built remaining string instead of rebuilding it
+  function checkStackingPhrase(remainingStr, rawWords, i) {
+    for (const phrase of STACKING_PHRASES) {
+      if (remainingStr.startsWith(phrase)) {
+        const wordCount = phrase.split(' ').length;
+        if (i + wordCount <= rawWords.length) {
+          return { label: '+', len: wordCount, type: 'stacking' };
+        }
+      }
+    }
+    return null;
+  }
+
+  // ---- Phrase patterns (expanded) ----
+  function checkPhrase(rawWords, i) {
+    const w0 = rawWords[i].clean;
+    const w1 = i + 1 < rawWords.length ? rawWords[i + 1].clean : '';
+    const w2 = i + 2 < rawWords.length ? rawWords[i + 2].clean : '';
+    const w3 = i + 3 < rawWords.length ? rawWords[i + 3].clean : '';
+    const w4 = i + 4 < rawWords.length ? rawWords[i + 4].clean : '';
+    const w5 = i + 5 < rawWords.length ? rawWords[i + 5].clean : '';
+
+    // --- Cat 12B: Meta-anxiety ---
+    // "why can't i just [x]"
+    if (w0 === 'why' && (w1 === "can't" || w1 === 'cant') && w2 === 'i' && w3 === 'just' && w4) {
+      return { label: "why can't i just " + w4, len: 5 };
+    }
+    // "why can't i [x]"
+    if (w0 === 'why' && (w1 === "can't" || w1 === 'cant') && w2 === 'i' && w3) {
+      return { label: "why can't i " + w3, len: 4 };
+    }
+    // "what's wrong with me"
+    if (w0 === "what's" && w1 === 'wrong' && w2 === 'with' && w3 === 'me') {
+      return { label: "what's wrong with me", len: 4 };
+    }
+    if (w0 === 'what' && w1 === 'is' && w2 === 'wrong' && w3 === 'with' && w4 === 'me') {
+      return { label: "what's wrong with me", len: 5 };
+    }
+    // "why am i like this"
+    if (w0 === 'why' && w1 === 'am' && w2 === 'i' && w3 === 'like' && w4 === 'this') {
+      return { label: 'why am i like this', len: 5 };
+    }
+    // "what is my problem"
+    if (w0 === 'what' && w1 === 'is' && w2 === 'my' && w3 === 'problem') {
+      return { label: "what's my problem", len: 4 };
+    }
+    // "why do i always [x]"
+    if (w0 === 'why' && w1 === 'do' && w2 === 'i' && w3 === 'always' && w4) {
+      return { label: 'why do i always ' + w4, len: 5 };
+    }
+
+    // --- Cat 12C: Self-monitoring ---
+    // "should be past this" / "should be over this"
+    if (w0 === 'should' && w1 === 'be' && (w2 === 'past' || w2 === 'over') && w3 === 'this') {
+      return { label: 'should be ' + w2 + ' this', len: 4 };
+    }
+    // "thought i dealt with this"
+    if (w0 === 'thought' && w1 === 'i' && w2 === 'dealt' && w3 === 'with') {
+      return { label: 'thought i dealt with this', len: w4 === 'this' ? 5 : 4 };
+    }
+    // "going backwards"
+    if (w0 === 'going' && w1 === 'backwards') {
+      return { label: 'going backwards', len: 2 };
+    }
+    // "not making progress"
+    if (w0 === 'not' && w1 === 'making' && w2 === 'progress') {
+      return { label: 'not making progress', len: 3 };
+    }
+
+    // --- Cat 2: Intensity ---
+    // "too [charged]"
+    if (w0 === 'too' && w1 && (isEmotionWord(w1) || w1 === 'much' || w1 === 'little' || w1 === 'late')) {
+      return { label: 'too ' + w1, len: 2 };
+    }
+    // "so far behind"
+    if (w0 === 'so' && w1 === 'far' && w2 === 'behind') {
+      return { label: 'so far behind', len: 3 };
+    }
+    // "so [charged]"
+    if (w0 === 'so' && w1 && (isEmotionWord(w1) || w1 === 'behind')) {
+      return { label: 'so ' + w1, len: 2 };
+    }
+    // "really/extremely/incredibly/deeply [charged]"
+    if ((w0 === 'really' || w0 === 'extremely' || w0 === 'incredibly' || w0 === 'deeply') && w1 && isEmotionWord(w1)) {
+      return { label: w0 + ' ' + w1, len: 2 };
+    }
+
+    // --- Cat 7: Not enough ---
+    if (w0 === 'not' && w2 === 'enough') {
+      return { label: 'not ' + w1 + ' enough', len: 3 };
+    }
+    if ((w0 === 'not' || w0 === 'never') && w1 === 'enough') {
+      return { label: w0 + ' enough', len: 2 };
+    }
+
+    // --- Cat 4: Obligation ---
+    // "should/shouldn't [x]"
+    if ((w0 === 'should' || w0 === "shouldn't" || w0 === 'shouldnt') && w1) {
+      if (w2 === 'better' || w2 === 'able' || w2 === 'more' || w2 === 'less') {
+        return { label: w0 + ' ' + w1 + ' ' + w2, len: 3 };
+      }
+      return { label: w0 + ' ' + w1, len: 2 };
+    }
+    // "supposed to [be/feel/have/know/handle]"
+    if (w0 === 'supposed' && w1 === 'to' && w2 && (w2 === 'be' || w2 === 'feel' || w2 === 'have' || w2 === 'know' || w2 === 'handle' || isEmotionWord(w2))) {
+      return { label: 'supposed to ' + w2, len: 3 };
+    }
+    // "have to [keep/stop/be/charged]"
+    if (w0 === 'have' && w1 === 'to' && w2 && (isEmotionWord(w2) || w2 === 'keep' || w2 === 'stop' || w2 === 'be')) {
+      return { label: 'have to ' + w2, len: 3 };
+    }
+    // "need to [stop/be/fix/change/get]"
+    if (w0 === 'need' && w1 === 'to' && (w2 === 'stop' || w2 === 'be' || w2 === 'fix' || w2 === 'change' || w2 === 'get')) {
+      return { label: 'need to ' + w2, len: 3 };
+    }
+    // "ought to [be/x]"
+    if (w0 === 'ought' && w1 === 'to' && w2) {
+      return { label: 'ought to ' + w2, len: 3 };
+    }
+    // "by now" (timeline pressure)
+    if (w0 === 'by' && w1 === 'now') {
+      return { label: 'by now', len: 2 };
+    }
+
+    // --- Cat 11: Agency loss ---
+    // "can't [x]"
+    if ((w0 === "can't" || w0 === 'cant' || w0 === 'cannot') && w1) {
+      return { label: "can't " + w1, len: 2 };
+    }
+    // "out of control"
+    if (w0 === 'out' && w1 === 'of' && w2 === 'control') {
+      return { label: 'out of control', len: 3 };
+    }
+    // "no point/choice/hope/way"
+    if (w0 === 'no' && (w1 === 'point' || w1 === 'choice' || w1 === 'hope' || w1 === 'way')) {
+      return { label: 'no ' + w1, len: 2 };
+    }
+
+    // --- Cat 5: Minimizing ---
+    // "just a [identity noun]"
+    if (w0 === 'just' && w1 === 'a' && w2 && (IDENTITY_NOUNS.has(w2) || EXTRA_CHARGED.has(w2))) {
+      return { label: 'just a ' + w2, len: 3 };
+    }
+    // "not a big deal"
+    if (w0 === 'not' && w1 === 'a' && w2 === 'big' && w3 === 'deal') {
+      return { label: 'not a big deal', len: 4 };
+    }
+    // "i'm fine" (loaded minimizer)
+    if ((w0 === "i'm" || w0 === 'im') && w1 === 'fine') {
+      return { label: "i'm fine", len: 2 };
+    }
+    // "it's nothing"
+    if ((w0 === "it's" || w0 === 'its') && w1 === 'nothing') {
+      return { label: "it's nothing", len: 2 };
+    }
+    // "probably overreacting" / "probably just"
+    if (w0 === 'probably' && (w1 === 'overreacting' || w1 === 'just' || isEmotionWord(w1))) {
+      return { label: 'probably ' + w1, len: 2 };
+    }
+    // "forget it"
+    if (w0 === 'forget' && w1 === 'it') {
+      return { label: 'forget it', len: 2 };
+    }
+    // "i know this is [dismissive]" — Cat 12A
+    if (w0 === 'i' && w1 === 'know' && (w2 === 'this' || w2 === "it's" || w2 === 'its' || w2 === "i'm" || w2 === 'im') && w3 && isEmotionWord(w3)) {
+      return { label: 'i know... ' + w3, len: 4 };
+    }
+
+    // --- Cat 6: Compound metaphors ---
+    // "falling apart"
+    if (w0 === 'falling' && w1 === 'apart') {
+      return { label: 'falling apart', len: 2 };
+    }
+    // "going in circles"
+    if (w0 === 'going' && w1 === 'in' && w2 === 'circles') {
+      return { label: 'going in circles', len: 3 };
+    }
+    // "dead inside"
+    if (w0 === 'dead' && w1 === 'inside') {
+      return { label: 'dead inside', len: 2 };
+    }
+    // "falling behind"
+    if (w0 === 'falling' && w1 === 'behind') {
+      return { label: 'falling behind', len: 2 };
+    }
+    // "weighed down"
+    if (w0 === 'weighed' && w1 === 'down') {
+      return { label: 'weighed down', len: 2 };
+    }
+    // "shut down" / "shutting down"
+    if ((w0 === 'shut' || w0 === 'shutting') && w1 === 'down') {
+      return { label: w0 + ' down', len: 2 };
+    }
+    // "running away"
+    if (w0 === 'running' && w1 === 'away') {
+      return { label: 'running away', len: 2 };
+    }
+    // "pushing away" / "pushing people away"
+    if (w0 === 'pushing' && (w1 === 'away' || (w1 === 'people' && w2 === 'away'))) {
+      if (w1 === 'people') return { label: 'pushing people away', len: 3 };
+      return { label: 'pushing away', len: 2 };
+    }
+
+    // --- Cat 10: Catastrophizing ---
+    // "it's over"
+    if ((w0 === "it's" || w0 === 'its') && w1 === 'over') {
+      return { label: "it's over", len: 2 };
+    }
+    // "it's too late"
+    if ((w0 === "it's" || w0 === 'its') && w1 === 'too' && w2 === 'late') {
+      return { label: "it's too late", len: 3 };
+    }
+    // "never going to"
+    if (w0 === 'never' && w1 === 'going' && w2 === 'to' && w3) {
+      return { label: 'never going to ' + w3, len: 4 };
+    }
+
+    // --- Cat 9E: "or" as confusion between emotions ---
+    // "i don't know if i'm [x] or [y]"
+    if (w0 === "don't" && w1 === 'know' && w2 === 'if') {
+      return { label: "don't know if", len: 3 };
+    }
+
+    // --- Cat 9D: "even though" + self-contradiction ---
+    // (handled as stacking connector — already in STACKING_PHRASES)
+
+    // --- Cat 13: Relational obligation ---
+    // "after everything"
+    if (w0 === 'after' && w1 === 'everything') {
+      return { label: 'after everything', len: 2 };
+    }
+    // "i owe"
+    if (w0 === 'i' && w1 === 'owe') {
+      return { label: 'i owe', len: 2 };
+    }
+
+    // --- Cat 3: Absolutist + verb ---
+    if ((w0 === 'always' || w0 === 'never') && w1 && !STACKING_SINGLE.has(w1) && w1 !== 'and' && w1 !== 'or' && w1 !== 'going') {
+      return { label: w0 + ' ' + w1, len: 2 };
+    }
+    // "every time [x]"
+    if (w0 === 'every' && w1 === 'time') {
+      if (w2) return { label: 'every time ' + w2, len: 3 };
+      return { label: 'every time', len: 2 };
+    }
+
+    // --- Cat 7: Comparison ---
+    if (w0 === 'no' && w1 === 'one' && w2) {
+      return { label: 'no one ' + w2, len: 3 };
+    }
+    if (w0 === 'everyone' && w1 === 'else') {
+      return { label: 'everyone else', len: 2 };
+    }
+    // "normal people"
+    if (w0 === 'normal' && (w1 === 'people' || w1 === 'person')) {
+      return { label: 'normal ' + w1, len: 2 };
+    }
+
+    // --- Cat 9C: "because" as self-blame ---
+    if (w0 === 'because' && (w1 === "i'm" || w1 === 'im') && w2 && isEmotionWord(w2)) {
+      return { label: "because i'm " + w2, len: 3 };
+    }
+    if (w0 === 'because' && w1 === 'i' && w2 && isEmotionWord(w2)) {
+      return { label: 'because i ' + w2, len: 3 };
+    }
+
+    // --- Cat 1: Identity statements ---
+    // "i'm a [noun]"
+    if ((w0 === "i'm" || w0 === 'im') && w1 === 'a' && w2 && (IDENTITY_NOUNS.has(w2) || ADJECTIVES.has(w2))) {
+      return { label: "i'm a " + w2, len: 3 };
+    }
+    // "i am a [noun]"
+    if (w0 === 'i' && w1 === 'am' && w2 === 'a' && w3 && (IDENTITY_NOUNS.has(w3) || ADJECTIVES.has(w3))) {
+      return { label: "i'm a " + w3, len: 4 };
+    }
+    // "i am [adj]"
+    if (w0 === 'i' && w1 === 'am' && w2 && isEmotionWord(w2)) {
+      return { label: "i'm " + w2, len: 3 };
+    }
+    // "i'm [adj]"
+    if ((w0 === "i'm" || w0 === 'im') && w1 && isEmotionWord(w1)) {
+      return { label: "i'm " + w1, len: 2 };
+    }
+    // "i keep [verb]ing"
+    if (w0 === 'i' && w1 === 'keep' && w2 && IDENTITY_VERBS.has(w2)) {
+      return { label: 'i keep ' + w2, len: 3 };
+    }
+    // "i feel like a [noun]"
+    if (w0 === 'i' && w1 === 'feel' && w2 === 'like' && w3 === 'a' && w4 && (IDENTITY_NOUNS.has(w4) || EXTRA_CHARGED.has(w4))) {
+      return { label: 'feel like a ' + w4, len: 5 };
+    }
+    // "i feel [emotion]" (Cat 1 + emotion grounding)
+    if (w0 === 'i' && w1 === 'feel' && w2 && isEmotionWord(w2) && w2 !== 'like') {
+      return { label: 'i feel ' + w2, len: 3 };
+    }
+
+    // --- Cat 8A: clinical self-labels as phrases ---
+    // "i'm being [clinical]"
+    if ((w0 === "i'm" || w0 === 'im') && w1 === 'being' && w2 && isEmotionWord(w2)) {
+      return { label: "i'm being " + w2, len: 3 };
+    }
+    // "that's my [clinical] wound/pattern"
+    if ((w0 === "that's" || w0 === 'thats') && w1 === 'my' && w2 && isEmotionWord(w2)) {
+      return { label: "that's my " + w2, len: 3 };
+    }
+
+    return null;
+  }
+
+
+  // ===========================================================================
+  //  PARSER — Phrase-aware tokenizer
+  // ===========================================================================
+
+  function parseWords(text) {
+    // First pass: extract raw words with positions
+    const rawWords = [];
+    const regex = /(\S+)/g;
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      rawWords.push({
+        text: m[1],
+        clean: m[1].toLowerCase().replace(/[^a-z'-]/g, ''),
+        startIdx: m.index,
+        endIdx: m.index + m[1].length,
+      });
+    }
+
+    // Pre-build remaining strings for stacking check (PERF FIX: do it once)
+    const remainingStrings = new Array(rawWords.length);
+    for (let k = rawWords.length - 1; k >= 0; k--) {
+      if (k === rawWords.length - 1) {
+        remainingStrings[k] = rawWords[k].clean;
+      } else {
+        remainingStrings[k] = rawWords[k].clean + ' ' + remainingStrings[k + 1];
+      }
+    }
+
+    // Second pass: merge into phrases, detect stacking, mark charged
+    const result = [];
+    let i = 0;
+    while (i < rawWords.length) {
+      // Check multi-word stacking connectors first
+      const stack = checkStackingPhrase(remainingStrings[i], rawWords, i);
+      if (stack) {
+        result.push({
+          text: rawWords.slice(i, i + stack.len).map(w => w.text).join(' '),
+          pillLabel: '+',
+          startIdx: rawWords[i].startIdx,
+          endIdx: rawWords[i + stack.len - 1].endIdx,
+          isCharged: true,
+          isStacking: true,
+        });
+        i += stack.len;
+        continue;
+      }
+
+      // Check single-word stacking connectors
+      if (STACKING_SINGLE.has(rawWords[i].clean)) {
+        result.push({
+          text: rawWords[i].text,
+          pillLabel: '+',
+          startIdx: rawWords[i].startIdx,
+          endIdx: rawWords[i].endIdx,
+          isCharged: true,
+          isStacking: true,
+        });
+        i++;
+        continue;
+      }
+
+      // Check phrase patterns
+      const phrase = checkPhrase(rawWords, i);
+      if (phrase) {
+        const endI = Math.min(i + phrase.len, rawWords.length);
+        result.push({
+          text: rawWords.slice(i, endI).map(w => w.text).join(' '),
+          pillLabel: phrase.label,
+          startIdx: rawWords[i].startIdx,
+          endIdx: rawWords[endI - 1].endIdx,
+          isCharged: true,
+          isStacking: false,
+        });
+        i = endI;
+        continue;
+      }
+
+      // Single charged word
+      const charged = isChargedWord(rawWords[i].text);
+      result.push({
+        text: rawWords[i].text,
+        pillLabel: charged ? rawWords[i].clean : null,
+        startIdx: rawWords[i].startIdx,
+        endIdx: rawWords[i].endIdx,
+        isCharged: charged,
+        isStacking: false,
+      });
+      i++;
+    }
+
+    return result;
+  }
+
+
+  // ===========================================================================
+  //  STATE
+  // ===========================================================================
+
+  let fullText = '';
+  let words = [];
+  let releasedWordCount = 0;
+  let collectedPool = new Set();
+  let hasStarted = false;
+  const TRAIL_DISTANCE = 2;
+
+  // Transcript store — per-pill context snapshots
+  const pillContextStore = [];
+
+  function storePillContext(pillLabel, isStacking, sourceText, charStart, charEnd) {
+    pillContextStore.push({ pillLabel, isStacking, sourceText, charStart, charEnd });
+  }
+
+  function findContextForPill(pillLabel, isStacking) {
+    for (let i = pillContextStore.length - 1; i >= 0; i--) {
+      const entry = pillContextStore[i];
+      if (entry.pillLabel === pillLabel && entry.isStacking === isStacking) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  // Extract progressive context levels
+  function getContextLevels(entry) {
+    const text = entry.sourceText;
+    const start = entry.charStart;
+    const end = entry.charEnd;
+
+    function snapLeft(idx) {
+      let i = idx;
+      while (i > 0 && text[i - 1] !== ' ') i--;
+      return i;
+    }
+    function snapRight(idx) {
+      let i = idx;
+      while (i < text.length && text[i] !== ' ') i++;
+      return i;
+    }
+
+    // Level 1: ~5 words each side
+    let l1Start = snapLeft(Math.max(0, start - 45));
+    let l1End = snapRight(Math.min(text.length, end + 45));
+    const l1Text = text.slice(l1Start, l1End).trim();
+
+    // Level 2: 2-3 sentences
+    let sentStart = start;
+    while (sentStart > 0 && !'.!?\n'.includes(text[sentStart - 1])) sentStart--;
+    let sentEnd = end;
+    while (sentEnd < text.length && !'.!?\n'.includes(text[sentEnd])) sentEnd++;
+    if (sentEnd < text.length && '.!?'.includes(text[sentEnd])) sentEnd++;
+    let extraStart = sentStart;
+    if (extraStart > 0) { extraStart--; while (extraStart > 0 && !'.!?\n'.includes(text[extraStart - 1])) extraStart--; }
+    let extraEnd = sentEnd;
+    if (extraEnd < text.length) { extraEnd++; while (extraEnd < text.length && !'.!?\n'.includes(text[extraEnd])) extraEnd++; if (extraEnd < text.length && '.!?'.includes(text[extraEnd])) extraEnd++; }
+    const l2Text = text.slice(extraStart, extraEnd).trim();
+
+    // Level 3: full chunk
+    const l3Text = text.trim();
+    const l3Offset = text.indexOf(l3Text);
+
+    const levels = [];
+    levels.push({
+      text: l1Text,
+      highlightStart: start - l1Start,
+      highlightEnd: end - l1Start,
+    });
+
+    if (l2Text.length > l1Text.length + 5) {
+      levels.push({
+        text: l2Text,
+        highlightStart: start - extraStart,
+        highlightEnd: end - extraStart,
+      });
+    }
+
+    if (l3Text.length > (levels[levels.length - 1]?.text.length || 0) + 10) {
+      levels.push({
+        text: l3Text,
+        highlightStart: start - l3Offset,
+        highlightEnd: end - l3Offset,
+      });
+    }
+
+    return levels;
+  }
+
+  function getStackingContext(entry) {
+    const text = entry.sourceText;
+    const start = entry.charStart;
+    const end = entry.charEnd;
+
+    let beforeStart = Math.max(0, start - 80);
+    while (beforeStart > 0 && text[beforeStart - 1] !== ' ') beforeStart--;
+    const beforeText = text.slice(beforeStart, start).trim();
+
+    let afterEnd = Math.min(text.length, end + 80);
+    while (afterEnd < text.length && text[afterEnd] !== ' ') afterEnd++;
+    const afterText = text.slice(end, afterEnd).trim();
+
+    return { before: beforeText, after: afterText };
+  }
+
+
+  // ===========================================================================
+  //  DOM REFS
+  // ===========================================================================
+
+  const hiddenInput = document.getElementById('hiddenInput');
+  const typingDisplay = document.getElementById('typingDisplay');
+  const placeholder = document.getElementById('placeholder');
+  const cursorEl = document.getElementById('cursor');
+  const voidCanvas = document.getElementById('voidCanvas');
+  const pillPool = document.getElementById('pillPool');
+  const framing = document.getElementById('framing');
+
+  // Active pill context state
+  let activePill = null;
+  let activePillDepth = 0;
+  let activeContextEl = null;
+
+
+  // ===========================================================================
+  //  INPUT HANDLING — Single handler, RAF-debounced render (FREEZE FIX)
+  // ===========================================================================
+
+  let renderScheduled = false;
+  let releaseScheduled = false;
+  let punctTimer = null;
+  let pauseTimer = null;
+  let isReleasing = false; // guard against re-entrant releases
+
+  function focusInput() { hiddenInput.focus(); }
+
+  voidCanvas.addEventListener('click', focusInput);
+  voidCanvas.addEventListener('touchstart', () => focusInput(), { passive: true });
+  setTimeout(focusInput, 600);
+  setTimeout(focusInput, 1500);
+
+  // SINGLE input handler — replaces the duplicate listeners
+  hiddenInput.addEventListener('input', onInput);
+
+  function onInput() {
+    try {
+      fullText = hiddenInput.value;
+      words = parseWords(fullText);
+
+      if (!hasStarted && fullText.length > 0) {
+        hasStarted = true;
+        framing.classList.add('dimmed');
+      }
+
+      // Dismiss any open pill context when typing resumes
+      if (activePill) dismissContext();
+
+      // Schedule render on next animation frame (debounce)
+      scheduleRender();
+
+      // Schedule release check (separate frame to avoid layout thrash)
+      scheduleRelease();
+
+      // Timer logic — auto-release on punctuation or pause
+      if (punctTimer) clearTimeout(punctTimer);
+      if (pauseTimer) clearTimeout(pauseTimer);
+      const val = fullText.trim();
+
+      if (val.length > 1 && '.!?'.includes(val.slice(-1))) {
+        punctTimer = setTimeout(() => {
+          try { if (hiddenInput.value.trim() === val) forceReleaseAll(); }
+          catch (err) { showError('punctTimer', err); }
+        }, 1000);
+      }
+
+      if (val.length > 5) {
+        pauseTimer = setTimeout(() => {
+          try { if (hiddenInput.value.trim().length > 5) forceReleaseAll(); }
+          catch (err) { showError('pauseTimer', err); }
+        }, 3500);
+      }
+    } catch (err) {
+      showError('input', err);
+      scheduleRender();
+    }
+  }
+
+  function scheduleRender() {
+    if (renderScheduled) return;
+    renderScheduled = true;
+    requestAnimationFrame(() => {
+      renderScheduled = false;
+      try { renderTypingLine(); }
+      catch (err) { showError('render', err); }
+    });
+  }
+
+  function scheduleRelease() {
+    if (releaseScheduled) return;
+    releaseScheduled = true;
+    // Use double-RAF: render first, THEN measure + release
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        releaseScheduled = false;
+        try { releaseTrailing(); }
+        catch (err) { showError('release', err); }
+      });
+    });
+  }
+
+  hiddenInput.addEventListener('focus', () => { placeholder.style.opacity = '0'; });
+  hiddenInput.addEventListener('blur', () => {
+    if (!hasStarted) placeholder.style.opacity = '1';
+  });
+
+  hiddenInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); forceReleaseAll(); }
+  });
+
+
+  // ===========================================================================
+  //  WORD LOOKUP — Build index for O(1) char→word mapping (PERF FIX)
+  // ===========================================================================
+
+  // Build a sparse index: for each word, record its range
+  // Then findWordAt uses binary search or simple iteration (words are sorted)
+  function findWordAt(idx) {
+    // Words are sorted by startIdx, so we can exit early
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].startIdx > idx) return null;
+      if (idx >= words[i].startIdx && idx < words[i].endIdx) return words[i];
+    }
+    return null;
+  }
+
+  function getReleasedCharCount() {
+    if (releasedWordCount === 0 || words.length === 0) return 0;
+    return words[Math.min(releasedWordCount, words.length) - 1].endIdx;
+  }
+
+
+  // ===========================================================================
+  //  RENDER TYPING LINE
+  // ===========================================================================
+
+  function renderTypingLine() {
+    while (typingDisplay.firstChild && typingDisplay.firstChild !== cursorEl) {
+      typingDisplay.removeChild(typingDisplay.firstChild);
+    }
+
+    if (fullText.length === 0 && !hasStarted) {
+      typingDisplay.insertBefore(placeholder, cursorEl);
+      placeholder.style.opacity = '1';
+      return;
+    }
+
+    placeholder.style.opacity = '0';
+    if (placeholder.parentNode === typingDisplay) typingDisplay.removeChild(placeholder);
+
+    const relCharIdx = getReleasedCharCount();
+    const visText = fullText.slice(relCharIdx);
+
+    // Trail boundary
+    const trailWordIdx = words.length - TRAIL_DISTANCE;
+    let trailCharIdx = 0;
+    if (trailWordIdx >= 0 && trailWordIdx < words.length) {
+      trailCharIdx = words[trailWordIdx].startIdx;
+    }
+
+    const frag = document.createDocumentFragment();
+    let i = 0;
+
+    while (i < visText.length) {
+      const gIdx = relCharIdx + i;
+      const isTrail = gIdx < trailCharIdx;
+      const w = findWordAt(gIdx);
+
+      // Start of a charged word/phrase in the trail zone → render as inline pill
+      if (isTrail && w && w.isCharged && gIdx === w.startIdx) {
+        const pill = document.createElement('span');
+        pill.className = 'inline-pill';
+        if (w.isStacking) pill.classList.add('stacking');
+        pill.textContent = w.pillLabel;
+        pill.dataset.word = w.pillLabel;
+        pill.dataset.startIdx = w.startIdx;
+        frag.appendChild(pill);
+        i += (w.endIdx - w.startIdx);
+        continue;
+      }
+
+      // Regular character
+      const span = document.createElement('span');
+      span.className = 'char';
+      span.textContent = visText[i];
+
+      if (isTrail) {
+        // Skip chars that are part of a charged word already rendered as pill
+        if (w && w.isCharged) {
+          i++;
+          continue;
+        }
+        span.classList.add('trail');
+      }
+
+      frag.appendChild(span);
+      i++;
+    }
+
+    typingDisplay.insertBefore(frag, cursorEl);
+  }
+
+
+  // ===========================================================================
+  //  RELEASE TRAILING WORDS
+  // ===========================================================================
+
+  function releaseTrailing() {
+    if (isReleasing) return; // guard re-entrance
+    const target = words.length - TRAIL_DISTANCE;
+    if (target <= releasedWordCount) return;
+
+    isReleasing = true;
+    try {
+      const canvasRect = voidCanvas.getBoundingClientRect();
+
+      const trailChars = typingDisplay.querySelectorAll('.char.trail');
+      const inlinePills = typingDisplay.querySelectorAll('.inline-pill');
+
+      const charData = [];
+      trailChars.forEach(c => {
+        const r = c.getBoundingClientRect();
+        charData.push({
+          char: c.textContent,
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+        });
+      });
+
+      const pillsToFall = [];
+      inlinePills.forEach(p => {
+        const r = p.getBoundingClientRect();
+        pillsToFall.push({
+          word: p.dataset.word,
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+          isStacking: p.classList.contains('stacking'),
+        });
+      });
+
+      // Store context for charged words being released
+      const sourceSnapshot = fullText;
+      for (let wi = releasedWordCount; wi < target && wi < words.length; wi++) {
+        if (words[wi] && words[wi].isCharged) {
+          storePillContext(
+            words[wi].pillLabel,
+            words[wi].isStacking,
+            sourceSnapshot,
+            words[wi].startIdx,
+            words[wi].endIdx,
+          );
+        }
+      }
+
+      releasedWordCount = target;
+
+      spawnRain(charData);
+
+      pillsToFall.forEach((p, i) => {
+        setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
+      });
+
+      renderTypingLine();
+    } finally {
+      isReleasing = false;
+    }
+  }
+
+
+  // ===========================================================================
+  //  FORCE RELEASE ALL
+  // ===========================================================================
+
+  function forceReleaseAll() {
+    try {
+      if (fullText.trim().length === 0) return;
+      if (isReleasing) return; // guard
+      isReleasing = true;
+
+      // Store per-pill context for all charged words before clearing
+      const sourceText = fullText;
+      for (let i = 0; i < words.length; i++) {
+        if (words[i] && words[i].isCharged) {
+          storePillContext(
+            words[i].pillLabel,
+            words[i].isStacking,
+            sourceText,
+            words[i].startIdx,
+            words[i].endIdx,
+          );
+        }
+      }
+
+      const canvasRect = voidCanvas.getBoundingClientRect();
+      const allChars = typingDisplay.querySelectorAll('.char:not(.trail)');
+      const charData = [];
+
+      allChars.forEach(c => {
+        const r = c.getBoundingClientRect();
+        charData.push({
+          char: c.textContent,
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+        });
+      });
+
+      // Check for unreleased charged words
+      const allPillsInline = [];
+      for (let i = releasedWordCount; i < words.length; i++) {
+        if (words[i].isCharged) {
+          const inlinePill = typingDisplay.querySelector(`.inline-pill[data-start-idx="${words[i].startIdx}"]`);
+          if (inlinePill) {
+            const r = inlinePill.getBoundingClientRect();
+            allPillsInline.push({
+              word: words[i].pillLabel,
+              x: r.left - canvasRect.left + r.width / 2,
+              y: r.top - canvasRect.top + r.height / 2,
+              isStacking: words[i].isStacking,
+            });
+          } else {
+            allPillsInline.push({
+              word: words[i].pillLabel,
+              x: voidCanvas.offsetWidth / 2,
+              y: 140,
+              isStacking: words[i].isStacking,
+            });
+          }
+        }
+      }
+
+      releasedWordCount = words.length;
+      spawnRain(charData);
+
+      allPillsInline.forEach((p, i) => {
+        setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
+      });
+
+      fullText = '';
+      words = [];
+      releasedWordCount = 0;
+      hiddenInput.value = '';
+      renderTypingLine();
+    } catch (err) {
+      showError('forceReleaseAll', err);
+      fullText = '';
+      words = [];
+      releasedWordCount = 0;
+      hiddenInput.value = '';
+      renderTypingLine();
+    } finally {
+      isReleasing = false;
+    }
+  }
+
+
+  // ===========================================================================
+  //  RAIN — Smooth gravity animation
+  // ===========================================================================
+
+  function spawnRain(charData) {
+    const canvasH = voidCanvas.offsetHeight;
+
+    charData.forEach((cd, i) => {
+      if (cd.char.trim() === '') return;
+
+      const el = document.createElement('span');
+      el.className = 'rain-char';
+      el.textContent = cd.char;
+      el.style.left = cd.x + 'px';
+      el.style.top = cd.y + 'px';
+      voidCanvas.appendChild(el);
+
+      const delay = i * 20 + Math.random() * 50;
+      const endY = canvasH - 60 - Math.random() * 40;
+      const totalFall = endY - cd.y;
+      const duration = 2000 + Math.random() * 1500;
+      const xDrift = -15 + Math.random() * 30;
+      const rotation = -10 + Math.random() * 20;
+      let startTime = null;
+
+      function fall(now) {
+        if (!startTime) startTime = now + delay;
+        if (now < startTime) { requestAnimationFrame(fall); return; }
+
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const eased = Math.pow(t, 1.6);
+
+        let opacity;
+        if (t < 0.06) opacity = t / 0.06 * 0.5;
+        else if (t < 0.6) opacity = 0.5 - t * 0.15;
+        else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
+
+        el.style.transform = `translate(${eased * xDrift}px, ${eased * totalFall}px) rotate(${eased * rotation}deg)`;
+        el.style.opacity = Math.max(0, opacity);
+        if (t > 0.65) el.style.filter = `blur(${(t - 0.65) * 3}px)`;
+
+        if (t < 1) requestAnimationFrame(fall);
+        else el.remove();
+      }
+
+      requestAnimationFrame(fall);
+    });
+  }
+
+
+  // ===========================================================================
+  //  PILL PILE
+  // ===========================================================================
+
+  let pileRows = [];
+  const ROW_PATTERN = [3, 2, 3, 2, 1, 2, 3, 1, 2];
+  let currentRowIdx = 0;
+  let currentRowCount = 0;
+
+  function dropPill(word, fromX, fromY, isStacking) {
+    const clean = isStacking ? '+' : word;
+    if (!isStacking && collectedPool.has(clean)) return;
+    if (!isStacking) collectedPool.add(clean);
+
+    if (pileRows.length === 0 || currentRowCount >= ROW_PATTERN[currentRowIdx % ROW_PATTERN.length]) {
+      const row = document.createElement('div');
+      row.className = 'pill-row';
+      row.style.transform = `translateX(${-8 + Math.random() * 16}px)`;
+      pillPool.appendChild(row);
+      pileRows.push(row);
+      currentRowIdx++;
+      currentRowCount = 0;
+    }
+
+    const rotate = -6 + Math.random() * 12;
+    const nudge = -5 + Math.random() * 10;
+
+    const poolPill = document.createElement('span');
+    poolPill.className = 'pill tappable' + (isStacking ? ' stacking-pill' : '');
+    poolPill.textContent = clean;
+    poolPill.style.opacity = '0';
+    poolPill.style.setProperty('--pill-rotate', rotate + 'deg');
+    poolPill.style.setProperty('--pill-nudge', nudge + 'px');
+    poolPill.dataset.pillLabel = word;
+    poolPill.dataset.isStacking = isStacking ? '1' : '0';
+    poolPill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handlePillTap(e);
+    });
+    pileRows[pileRows.length - 1].appendChild(poolPill);
+    currentRowCount++;
+
+    // Measure target position
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const tgtRect = poolPill.getBoundingClientRect();
+    const targetX = tgtRect.left - canvasRect.left + tgtRect.width / 2;
+    const targetY = tgtRect.top - canvasRect.top + tgtRect.height / 2;
+
+    // Create flying pill
+    const flyPill = document.createElement('span');
+    flyPill.className = 'falling-pill';
+    flyPill.textContent = clean;
+    flyPill.style.left = fromX + 'px';
+    flyPill.style.top = fromY + 'px';
+    flyPill.style.opacity = '1';
+    voidCanvas.appendChild(flyPill);
+
+    const driftX = targetX - fromX;
+    const driftY = targetY - fromY;
+    const duration = 1300 + Math.random() * 300;
+    let startTime = null;
+
+    function fall(now) {
+      if (!startTime) startTime = now;
+      const t = Math.min((now - startTime) / duration, 1);
+      const yE = Math.pow(t, 1.5);
+      const xE = t * t * (3 - 2 * t);
+      flyPill.style.transform = `translate(calc(-50% + ${xE * driftX}px), calc(-50% + ${yE * driftY}px)) rotate(${rotate * t}deg)`;
+      if (t < 1) { requestAnimationFrame(fall); }
+      else { poolPill.style.opacity = '1'; flyPill.remove(); }
+    }
+    requestAnimationFrame(fall);
+  }
+
+
+  // ===========================================================================
+  //  PILL TAP — Progressive context reveal
+  // ===========================================================================
+
+  function handlePillTap(e) {
+    const pill = e.currentTarget;
+    if (pill === activePill) { dismissContext(); return; }
+    dismissContext();
+    activePill = pill;
+    activePillDepth = 0;
+    pill.classList.add('active');
+    createContextElement(pill);
+  }
+
+  function createContextElement(pill) {
+    const pillLabel = pill.dataset.pillLabel;
+    const isStacking = pill.dataset.isStacking === '1';
+    const ctx = findContextForPill(pillLabel, isStacking);
+
+    if (!ctx) { dismissContext(); return; }
+
+    const contextEl = document.createElement('div');
+    contextEl.className = 'pill-context';
+    pill.appendChild(contextEl);
+    activeContextEl = contextEl;
+
+    if (isStacking) {
+      const sides = getStackingContext(ctx);
+      contextEl.innerHTML = `
+        <div class="pill-context-inner">
+          ${sides.before ? `<div class="tangle-side">${escapeHtml(truncateGently(sides.before, 80))}</div>` : ''}
+          <div class="tangle-divider">·  +  ·</div>
+          ${sides.after ? `<div class="tangle-side">${escapeHtml(truncateGently(sides.after, 80))}</div>` : ''}
+        </div>
+      `;
+      contextEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dismissContext();
+      });
+    } else {
+      const levels = getContextLevels(ctx);
+      if (levels.length === 0) { dismissContext(); return; }
+      contextEl._levels = levels;
+      renderContextDepth(contextEl, 0);
+      contextEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activePillDepth++;
+        if (activePillDepth >= contextEl._levels.length) {
+          dismissContext();
+          return;
+        }
+        renderContextDepth(contextEl, activePillDepth);
+      });
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        contextEl.classList.add('visible');
+      });
+    });
+  }
+
+  function renderContextDepth(contextEl, depth) {
+    const levels = contextEl._levels;
+    const level = levels[Math.min(depth, levels.length - 1)];
+    const highlighted = buildHighlightedText(level);
+
+    let dotsHtml = '';
+    if (levels.length > 1) {
+      dotsHtml = '<div class="depth-dots">';
+      for (let d = 0; d < levels.length; d++) {
+        dotsHtml += `<span class="depth-dot${d <= depth ? ' active' : ''}"></span>`;
+      }
+      dotsHtml += '</div>';
+    }
+
+    contextEl.innerHTML = `
+      <div class="pill-context-inner">
+        <div class="context-text">${highlighted}</div>
+        ${dotsHtml}
+      </div>
+    `;
+
+    contextEl.classList.remove('depth-1', 'depth-2');
+    if (depth === 1) contextEl.classList.add('depth-1');
+    else if (depth >= 2) contextEl.classList.add('depth-2');
+  }
+
+  function buildHighlightedText(level) {
+    const text = level.text;
+    const hStart = Math.max(0, level.highlightStart);
+    const hEnd = Math.min(text.length, level.highlightEnd);
+
+    if (hStart >= hEnd || hStart >= text.length) {
+      return escapeHtml(text);
+    }
+
+    const before = text.slice(0, hStart);
+    const highlight = text.slice(hStart, hEnd);
+    const after = text.slice(hEnd);
+
+    return escapeHtml(before) +
+      '<span class="context-highlight">' + escapeHtml(highlight) + '</span>' +
+      escapeHtml(after);
+  }
+
+  function dismissContext() {
+    if (activeContextEl) {
+      activeContextEl.classList.remove('visible');
+      const el = activeContextEl;
+      setTimeout(() => el.remove(), 600);
+      activeContextEl = null;
+    }
+    if (activePill) {
+      activePill.classList.remove('active');
+      activePill = null;
+    }
+    activePillDepth = 0;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function truncateGently(str, maxLen) {
+    if (str.length <= maxLen) return str;
+    const cut = str.lastIndexOf(' ', maxLen);
+    return str.slice(0, cut > 0 ? cut : maxLen) + '…';
+  }
+
+  // Dismiss context on tap elsewhere
+  document.addEventListener('click', (e) => {
+    if (activePill && !activePill.contains(e.target)) {
+      dismissContext();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

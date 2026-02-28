@@ -1,0 +1,452 @@
+/* ================================================
+   BODY SCAN INTRO - Dark Purple Theme
+   
+   Dark background with light text for contrast.
+   Visual hierarchy in title.
+   Popup for window of tolerance definition.
+   ================================================ */
+
+.body-scan-intro-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2d2438; /* Dark purple background */
+  z-index: 50;
+  animation: bodyIntroFadeIn 0.4s ease forwards;
+}
+
+/* Back button - light on dark */
+.body-scan-intro-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+  color: #d8d4e8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.body-scan-intro-back:hover {
+  color: #f8f7fc;
+}
+
+.body-scan-intro-back:focus-visible {
+  outline: 2px solid #e6e6fa;
+  outline-offset: 2px;
+}
+
+@keyframes bodyIntroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.body-scan-intro-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-xl);
+  max-width: 440px;
+  gap: var(--space-lg);
+}
+
+/* ================================================
+   TITLE - Visual Hierarchy
+   ================================================ */
+
+.body-scan-intro-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.body-scan-intro-title {
+  font-family: Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: #f8f7fc; /* Cool off-white */
+  margin: 0;
+  line-height: 1.3;
+}
+
+.body-scan-intro-subtitle {
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #d8d4e8; /* Light cool lavender */
+  margin: 0;
+}
+
+/* ================================================
+   BODY TEXT
+   ================================================ */
+
+.body-scan-intro-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.body-scan-intro-text p {
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  color: #e8e4f0; /* Light cool grey-lavender */
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Underlined term that opens popup */
+.body-scan-intro-term {
+  font-family: Georgia, serif;
+  font-size: inherit;
+  color: #e6e6fa; /* Light lavender accent */
+  background: none;
+  border: none;
+  border-bottom: 1px solid #e6e6fa;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.body-scan-intro-term:hover,
+.body-scan-intro-term:focus {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.body-scan-intro-term:focus-visible {
+  outline: 2px solid #e6e6fa;
+  outline-offset: 2px;
+}
+
+/* ================================================
+   SAFETY MESSAGE - Better contrast
+   ================================================ */
+
+.body-scan-intro-safety {
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #e0dcea; /* Lighter text for better readability */
+  line-height: 1.7;
+  margin: 0;
+  padding: var(--space-md);
+  background: rgba(184, 169, 201, 0.15); /* More visible background */
+  border: 1px solid rgba(184, 169, 201, 0.25);
+  border-radius: 12px;
+  max-width: 380px;
+}
+
+/* ================================================
+   BUTTONS - Dark theme (reversed colors)
+   ================================================ */
+
+.body-scan-intro-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.body-scan-intro-btn {
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  padding: 0.875rem 2rem;
+  background: #e6e6fa; /* Light lavender */
+  color: #2d2438; /* Dark purple text */
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  min-height: 44px;
+  min-width: 200px;
+}
+
+.body-scan-intro-btn:hover {
+  background: #f0eeff;
+}
+
+.body-scan-intro-btn:active {
+  transform: scale(0.98);
+}
+
+.body-scan-intro-btn:focus-visible {
+  outline: 2px solid #e6e6fa;
+  outline-offset: 3px;
+}
+
+/* Secondary button - outlined on dark background */
+.body-scan-intro-btn.secondary {
+  background: transparent;
+  color: #e6e6fa;
+  border: 1px solid #b8a9c9;
+}
+
+.body-scan-intro-btn.secondary:hover {
+  background: rgba(230, 230, 250, 0.1);
+  border-color: #e6e6fa;
+}
+
+/* ================================================
+   POPUP OVERLAY
+   ================================================ */
+
+.body-scan-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: popupOverlayFadeIn 0.2s ease forwards;
+  padding: var(--space-md);
+}
+
+@keyframes popupOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.body-scan-popup {
+  background: #f8f7fc; /* Cool off-white */
+  border-radius: 16px;
+  padding: var(--space-md);
+  max-width: 360px; /* Smaller width */
+  max-height: 50vh; /* Half viewport height */
+  position: relative;
+  animation: popupSlideIn 0.3s ease forwards;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable content area with fade */
+.body-scan-popup-scroll {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: var(--space-xs);
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 85%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 85%,
+    transparent 100%
+  );
+}
+
+@keyframes popupSlideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Close button */
+.body-scan-popup-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b6370;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.body-scan-popup-close:hover {
+  background: rgba(45, 36, 56, 0.08);
+  color: #2d2438;
+}
+
+.body-scan-popup-close:focus-visible {
+  outline: 2px solid #b8a9c9;
+  outline-offset: 2px;
+}
+
+/* Popup title */
+.body-scan-popup-title {
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: #2d2438;
+  margin: 0 0 var(--space-md) 0;
+  padding-right: 40px; /* Space for close button */
+}
+
+/* Popup text */
+.body-scan-popup-text {
+  font-family: Georgia, serif;
+  font-size: 1rem; /* 16px minimum for accessibility */
+  color: #4a4a4a;
+  line-height: 1.7;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+/* Link to source */
+.body-scan-popup-link {
+  font-family: Georgia, serif;
+  font-size: 0.9rem;
+  color: #6b6370;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.body-scan-popup-link:hover {
+  color: #2d2438;
+  border-color: #2d2438;
+}
+
+.body-scan-popup-link:focus-visible {
+  outline: 2px solid #b8a9c9;
+  outline-offset: 2px;
+}
+
+/* Credit line */
+.body-scan-popup-credit {
+  font-family: Georgia, serif;
+  font-size: 0.85rem; /* Slightly larger for readability */
+  font-style: italic;
+  color: #6b6370; /* Better contrast but still secondary */
+  margin: var(--space-sm) 0 var(--space-md) 0;
+}
+
+/* Image container - at bottom with rounded corners */
+.body-scan-popup-image-container {
+  margin-top: var(--space-md);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ebe6f2;
+}
+
+.body-scan-popup-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+@media (max-width: 768px) {
+  .body-scan-intro-content {
+    padding: var(--space-lg);
+    max-width: 360px;
+  }
+
+  .body-scan-intro-title {
+    font-size: 1.5rem;
+  }
+
+  .body-scan-intro-subtitle {
+    font-size: 1rem;
+  }
+
+  .body-scan-intro-text p {
+    font-size: 0.95rem;
+  }
+
+  .body-scan-intro-safety {
+    font-size: 0.9rem;
+    padding: var(--space-sm);
+  }
+
+  .body-scan-popup {
+    padding: var(--space-md);
+    max-width: calc(100vw - 32px);
+    max-height: 75vh;
+  }
+
+  .body-scan-popup-title {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .body-scan-intro-content {
+    padding: var(--space-md);
+    max-width: 300px;
+    gap: var(--space-md);
+  }
+
+  .body-scan-intro-title {
+    font-size: 1.35rem;
+  }
+
+  .body-scan-intro-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .body-scan-intro-text p {
+    font-size: 0.9rem;
+  }
+
+  .body-scan-intro-safety {
+    font-size: 0.85rem;
+  }
+
+  .body-scan-intro-btn {
+    min-width: 180px;
+    font-size: 0.95rem;
+  }
+
+  .body-scan-popup {
+    padding: var(--space-sm);
+    max-height: 70vh;
+  }
+
+  .body-scan-popup-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* ================================================
+   REDUCED MOTION
+   ================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .body-scan-intro-container {
+    animation: none;
+  }
+
+  .body-scan-intro-btn {
+    transition: none;
+  }
+
+  .body-scan-popup-overlay {
+    animation: none;
+  }
+
+  .body-scan-popup {
+    animation: none;
+  }
+}
