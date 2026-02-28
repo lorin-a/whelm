@@ -56,6 +56,7 @@
     color: var(--text);
     margin-bottom: 8px;
     line-height: 1.5;
+    transition: opacity 2s ease;
   }
 
   .framing .contract {
@@ -63,12 +64,20 @@
     font-style: italic;
     color: var(--text-faint);
     font-size: 14px;
+    transition: opacity 2s ease;
   }
 
   .framing.dimmed {
     animation: none;
-    transition: opacity 2s ease;
-    opacity: 0.55;
+    opacity: 1;
+  }
+
+  .framing.dimmed .instruction {
+    opacity: 0.35;
+  }
+
+  .framing.dimmed .contract {
+    opacity: 0.7;
   }
 
   @keyframes fadeIn {
@@ -87,9 +96,9 @@
   /* ---- Typing area: centered ---- */
   .typing-area {
     position: absolute;
-    top: 210px;
+    top: 35%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 15;
     width: 90%;
     max-width: 460px;
@@ -107,6 +116,13 @@
     overflow-wrap: break-word;
     position: relative;
     display: inline;
+    border-bottom: 1px solid var(--text-ghost);
+    padding-bottom: 4px;
+    transition: border-color 1.5s ease;
+  }
+
+  .typing-display.has-text {
+    border-color: transparent;
   }
 
   .typing-display .char {
@@ -184,19 +200,20 @@
     right: 16px;
     z-index: 25;
     width: 48px;
-    height: 48px;
     border: none;
     background: transparent;
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    gap: 2px;
+    padding: 6px 0;
     opacity: 0;
     animation: fadeIn 2.2s ease 0.3s forwards;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    color: var(--text-ghost);
+    color: var(--text-faint);
     transition: color 0.3s ease;
   }
 
@@ -212,6 +229,14 @@
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .sensory-toggle .toggle-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: var(--text-ghost);
+    letter-spacing: 0.05em;
+    line-height: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -248,7 +273,7 @@
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     min-width: 60px;
     overflow: visible;
   }
@@ -256,7 +281,7 @@
   .pill-row {
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     overflow: visible;
     position: relative;
   }
@@ -268,7 +293,7 @@
     color: var(--linger);
     background: var(--linger-bg);
     border: 1px solid var(--linger-border);
-    padding: 5px 15px;
+    padding: 8px 16px;
     border-radius: 20px;
     white-space: nowrap;
     pointer-events: auto;
@@ -277,6 +302,9 @@
     will-change: transform, opacity;
     letter-spacing: 0.025em;
     position: relative;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
     transform: rotate(var(--pill-rotate, 0deg)) translateX(var(--pill-nudge, 0px)) translateY(0);
     transition: transform 0.5s cubic-bezier(0.25, 0, 0.15, 1),
                 background 0.3s ease,
@@ -288,7 +316,7 @@
     background: rgba(61, 56, 51, 0.04);
     border-color: rgba(61, 56, 51, 0.15);
     font-weight: 500;
-    padding: 5px 10px;
+    padding: 8px 12px;
     font-size: 14px;
     min-width: 28px;
     text-align: center;
@@ -351,12 +379,12 @@
   }
 
   .pill-context-inner {
-    padding: 10px 16px 12px;
-    background: rgba(245, 240, 235, 0.92);
-    border: 1px solid rgba(92, 79, 107, 0.12);
+    padding: 12px 18px 14px;
+    background: rgba(245, 240, 235, 0.97);
+    border: 1px solid rgba(92, 79, 107, 0.18);
     border-radius: 14px;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     animation: contextFadeIn 0.35s ease forwards;
   }
 
@@ -370,14 +398,14 @@
     font-size: 14px;
     font-weight: 300;
     line-height: 1.7;
-    color: var(--text-faint);
+    color: var(--text-soft);
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
 
   .pill-context .context-text .context-highlight {
     color: var(--linger);
-    font-weight: 400;
+    font-weight: 500;
   }
 
   .pill-context .tangle-side {
@@ -385,7 +413,7 @@
     font-size: 13px;
     font-weight: 300;
     line-height: 1.6;
-    color: var(--text-faint);
+    color: var(--text-soft);
     padding: 4px 0;
   }
 
@@ -397,24 +425,15 @@
     padding: 2px 0;
   }
 
-  .pill-context .depth-dots {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
+  .pill-context .depth-prompt {
     margin-top: 8px;
     padding-top: 6px;
-  }
-
-  .pill-context .depth-dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--text-ghost);
-    transition: background 0.3s ease;
-  }
-
-  .pill-context .depth-dot.active {
-    background: var(--linger);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--text-faint);
+    text-align: center;
+    letter-spacing: 0.02em;
   }
 
   @keyframes pillArrive {
@@ -430,9 +449,30 @@
     font-size: 16px;
   }
 
+  /* ---- Pill hint ---- */
+  .pill-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-faint);
+    opacity: 0;
+    transition: opacity 1s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .pill-hint.visible {
+    opacity: 1;
+  }
+
   @media (max-width: 600px) {
-    .framing { padding-top: 38px; }
-    .typing-area { top: 200px; width: 88%; }
+    .framing { padding-top: 32px; }
+    .typing-area { top: 30%; width: 88%; }
     .pill-pool { bottom: 16px; }
   }
 
@@ -474,7 +514,8 @@
 </div>
 
 <button class="sensory-toggle" id="sensoryToggle" aria-label="Enable sound and haptics" type="button">
-  <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+  <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
+  <span class="toggle-label">sound</span>
 </button>
 
 <div class="void-canvas" id="voidCanvas">
@@ -486,6 +527,7 @@
     </div>
   </div>
   <div class="pill-pool" id="pillPool"></div>
+  <div class="pill-hint" id="pillHint">tap a word to see its story</div>
 </div>
 
 <textarea class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -1086,10 +1128,17 @@
       return i;
     }
 
+    // Helper: trim slice and compute offset adjustment
+    function trimSlice(str, sliceStart) {
+      const trimmed = str.trim();
+      const leadingSpaces = str.indexOf(trimmed);
+      return { text: trimmed, offset: sliceStart + leadingSpaces };
+    }
+
     // Level 1: ~5 words each side
     let l1Start = snapLeft(Math.max(0, start - 45));
     let l1End = snapRight(Math.min(text.length, end + 45));
-    const l1Text = text.slice(l1Start, l1End).trim();
+    const l1 = trimSlice(text.slice(l1Start, l1End), l1Start);
 
     // Level 2: 2-3 sentences
     let sentStart = start;
@@ -1101,32 +1150,31 @@
     if (extraStart > 0) { extraStart--; while (extraStart > 0 && !'.!?\n'.includes(text[extraStart - 1])) extraStart--; }
     let extraEnd = sentEnd;
     if (extraEnd < text.length) { extraEnd++; while (extraEnd < text.length && !'.!?\n'.includes(text[extraEnd])) extraEnd++; if (extraEnd < text.length && '.!?'.includes(text[extraEnd])) extraEnd++; }
-    const l2Text = text.slice(extraStart, extraEnd).trim();
+    const l2 = trimSlice(text.slice(extraStart, extraEnd), extraStart);
 
     // Level 3: full chunk
-    const l3Text = text.trim();
-    const l3Offset = text.indexOf(l3Text);
+    const l3 = trimSlice(text, 0);
 
     const levels = [];
     levels.push({
-      text: l1Text,
-      highlightStart: start - l1Start,
-      highlightEnd: end - l1Start,
+      text: l1.text,
+      highlightStart: start - l1.offset,
+      highlightEnd: end - l1.offset,
     });
 
-    if (l2Text.length > l1Text.length + 5) {
+    if (l2.text.length > l1.text.length + 5) {
       levels.push({
-        text: l2Text,
-        highlightStart: start - extraStart,
-        highlightEnd: end - extraStart,
+        text: l2.text,
+        highlightStart: start - l2.offset,
+        highlightEnd: end - l2.offset,
       });
     }
 
-    if (l3Text.length > (levels[levels.length - 1]?.text.length || 0) + 10) {
+    if (l3.text.length > (levels[levels.length - 1]?.text.length || 0) + 10) {
       levels.push({
-        text: l3Text,
-        highlightStart: start - l3Offset,
-        highlightEnd: end - l3Offset,
+        text: l3.text,
+        highlightStart: start - l3.offset,
+        highlightEnd: end - l3.offset,
       });
     }
 
@@ -1709,7 +1757,7 @@
   // ===========================================================================
 
   const sensoryToggle = document.getElementById('sensoryToggle');
-  const svgOff = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+  const svgOff = '<path d="M11 5L6 9H2v6h4l5 4V5z"/>';
   const svgOn = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
 
   sensoryToggle.addEventListener('click', () => {
@@ -1870,19 +1918,15 @@
     const level = levels[Math.min(depth, levels.length - 1)];
     const highlighted = buildHighlightedText(level);
 
-    let dotsHtml = '';
-    if (levels.length > 1) {
-      dotsHtml = '<div class="depth-dots">';
-      for (let d = 0; d < levels.length; d++) {
-        dotsHtml += `<span class="depth-dot${d <= depth ? ' active' : ''}"></span>`;
-      }
-      dotsHtml += '</div>';
+    let promptHtml = '';
+    if (levels.length > 1 && depth < levels.length - 1) {
+      promptHtml = '<div class="depth-prompt">tap for more context</div>';
     }
 
     contextEl.innerHTML = `
       <div class="pill-context-inner">
         <div class="context-text">${highlighted}</div>
-        ${dotsHtml}
+        ${promptHtml}
       </div>
     `;
 
@@ -1941,6 +1985,89 @@
       dismissContext();
     }
   });
+
+
+  // ===========================================================================
+  //  TYPING DISPLAY UNDERLINE — fades after first character
+  // ===========================================================================
+
+  const typingDisplayEl = document.getElementById('typingDisplay');
+  let underlineRemoved = false;
+
+  function checkUnderline() {
+    if (!underlineRemoved && fullText.length > 0) {
+      underlineRemoved = true;
+      typingDisplayEl.classList.add('has-text');
+    }
+  }
+
+  // Hook into input handler
+  const _origOnInput = onInput;
+  onInput = function() {
+    _origOnInput();
+    checkUnderline();
+  };
+  hiddenInput.removeEventListener('input', _origOnInput);
+  hiddenInput.addEventListener('input', onInput);
+
+
+  // ===========================================================================
+  //  FIRST-PILL HINT — "tap a word to see its story"
+  // ===========================================================================
+
+  const pillHint = document.getElementById('pillHint');
+  let hintShown = false;
+
+  // Patch dropPill to show hint on first pill settle
+  const _origDropPill = dropPill;
+  dropPill = function(word, fromX, fromY, isStacking) {
+    _origDropPill(word, fromX, fromY, isStacking);
+    if (!hintShown) {
+      hintShown = true;
+      // Show after pill settles (~1.5s fall duration)
+      setTimeout(() => {
+        pillHint.classList.add('visible');
+        // Auto-fade after 4s
+        setTimeout(() => {
+          pillHint.classList.remove('visible');
+        }, 4000);
+      }, 1600);
+    }
+  };
+
+
+  // ===========================================================================
+  //  MOBILE KEYBOARD HANDLING — visualViewport API
+  // ===========================================================================
+
+  if (window.visualViewport) {
+    let keyboardRAF = null;
+    const originalPillPoolBottom = getComputedStyle(pillPool).bottom;
+    const originalPillHintBottom = getComputedStyle(pillHint).bottom;
+
+    function handleViewportResize() {
+      if (keyboardRAF) return;
+      keyboardRAF = requestAnimationFrame(() => {
+        keyboardRAF = null;
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+        if (keyboardHeight > 100) {
+          // Keyboard is open — shift pill pool up
+          pillPool.style.bottom = (parseInt(originalPillPoolBottom) + keyboardHeight) + 'px';
+          pillHint.style.bottom = (parseInt(originalPillHintBottom) + keyboardHeight) + 'px';
+          framing.style.opacity = '0';
+          framing.style.pointerEvents = 'none';
+        } else {
+          // Keyboard closed — restore
+          pillPool.style.bottom = '';
+          pillHint.style.bottom = '';
+          framing.style.opacity = '';
+          framing.style.pointerEvents = '';
+        }
+      });
+    }
+
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+  }
 
 })();
 </script>
