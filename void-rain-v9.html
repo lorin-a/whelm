@@ -629,11 +629,40 @@
     pointer-events: auto;
   }
 
-  /* ---- Clear all button (void page) ---- */
-  .clear-all-btn {
+  /* ---- Forward arrow (void top-right, return to portrait) ---- */
+  .forward-btn {
     position: absolute;
     top: 44px;
     right: 16px;
+    z-index: 16;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-soft);
+    font-size: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+
+  .forward-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ---- Clear all button (centered below instructions) ---- */
+  .clear-all-btn {
+    position: absolute;
+    top: 22%;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 16;
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
@@ -641,12 +670,11 @@
     color: var(--text-faint);
     background: transparent;
     border: none;
-    padding: 10px 12px;
+    padding: 10px 16px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     min-height: 44px;
-    min-width: 44px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.8s ease;
@@ -662,7 +690,8 @@
     .typing-area { top: 30%; width: 88%; }
     .pill-pool { bottom: 16px; }
     .back-btn { top: 32px; left: 8px; }
-    .clear-all-btn { top: 32px; right: 8px; }
+    .forward-btn { top: 32px; right: 8px; }
+    .clear-all-btn { top: 18%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -919,6 +948,7 @@
     </div>
   </div>
   <button class="back-btn" id="backBtn" type="button" aria-label="Back to writing">&#8592;</button>
+  <button class="forward-btn" id="forwardBtn" type="button" aria-label="Return to portrait">&#8594;</button>
   <button class="clear-all-btn" id="clearAllBtn" type="button">clear all</button>
   <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
 </div>
@@ -2547,8 +2577,9 @@
     pillHintPrimary.textContent = 'tap a word to reveal its context';
     pillHintSecondary.textContent = 'tap + hold to edit';
     pillHintSecondary.style.opacity = '';
-    // Hide clear-all (void-only)
+    // Hide void-only buttons
     clearAllBtn.classList.remove('visible');
+    forwardBtn.classList.remove('visible');
 
     setTimeout(() => {
       pillHints.classList.add('visible');
@@ -2561,6 +2592,7 @@
 
   const keepBtn = document.getElementById('keepBtn');
   const backBtn = document.getElementById('backBtn');
+  const forwardBtn = document.getElementById('forwardBtn');
   const clearAllBtn = document.getElementById('clearAllBtn');
 
   doneBtn.addEventListener('click', (e) => {
@@ -2577,6 +2609,11 @@
   backBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     returnToVoid();
+  });
+
+  forwardBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    transitionToPortrait();
   });
 
   clearAllBtn.addEventListener('click', (e) => {
@@ -2605,9 +2642,10 @@
     addOwnBtn.classList.remove('visible');
     addOwnBtn.style.top = '';
 
-    // Show clear-all on void if pills exist
+    // Show clear-all and forward arrow on void if pills exist
     if (pillPool.querySelectorAll('.pill').length > 0) {
       clearAllBtn.classList.add('visible');
+      forwardBtn.classList.add('visible');
     }
 
     // Un-dim typing area, restore cursor
@@ -2696,6 +2734,7 @@
     pillHintSecondary.style.opacity = '';
     pillHints.classList.remove('visible');
     backBtn.classList.remove('visible');
+    forwardBtn.classList.remove('visible');
     clearAllBtn.classList.remove('visible');
     addOwnBtn.classList.remove('visible');
     addOwnBtn.style.top = '';
