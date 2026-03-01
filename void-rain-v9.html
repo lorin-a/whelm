@@ -695,20 +695,19 @@
     display: block;
   }
 
-  /* ---- "+ add your own" button (positioned above pill pool) ---- */
+  /* ---- "+ add your own" button (below pill grid) ---- */
   .add-own-btn {
     position: absolute;
-    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     z-index: 12;
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
-    font-weight: 400;
-    color: var(--linger);
-    background: var(--linger-bg);
-    border: 1px solid var(--linger-border);
-    padding: 10px 24px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--linger);
+    border: 1px solid var(--linger);
+    padding: 10px 28px;
     border-radius: 24px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -717,7 +716,7 @@
     letter-spacing: 0.02em;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.8s ease, bottom 0.5s ease;
+    transition: opacity 0.8s ease;
     white-space: nowrap;
   }
 
@@ -2477,13 +2476,12 @@
   }
 
   function positionAddOwnBtn() {
-    // Place button between witnessing text and pill grid
+    // Place button just below the pill grid
     requestAnimationFrame(() => {
       const poolRect = pillPool.getBoundingClientRect();
       const canvasRect = voidCanvas.getBoundingClientRect();
-      const poolTop = poolRect.top - canvasRect.top;
-      addOwnBtn.style.bottom = 'auto';
-      addOwnBtn.style.top = Math.max(poolTop - 52, 80) + 'px';
+      const poolBottom = poolRect.bottom - canvasRect.top;
+      addOwnBtn.style.top = (poolBottom + 16) + 'px';
     });
   }
 
