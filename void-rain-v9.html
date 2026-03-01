@@ -39,6 +39,17 @@
     text-align: center;
     z-index: 20;
     pointer-events: none;
+    display: flex;
+    justify-content: center;
+  }
+
+  .framing-inner {
+    background: rgba(92, 79, 107, 0.025);
+    border: 1px solid rgba(92, 79, 107, 0.1);
+    border-radius: 14px;
+    padding: 18px 24px;
+    max-width: 440px;
+    width: 100%;
   }
 
   .framing p {
@@ -104,7 +115,12 @@
     text-align: center;
     cursor: text;
     opacity: 0;
-    animation: fadeIn 1.8s ease 2.4s forwards;
+    animation: typingFadeIn 1.8s ease 2.4s forwards;
+  }
+
+  @keyframes typingFadeIn {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 4px)); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
   }
 
   .typing-display {
@@ -197,18 +213,20 @@
 
   /* ---- Done invite ---- */
   .done-invite {
-    position: absolute;
-    top: 55%;
-    left: 0;
-    right: 0;
-    z-index: 11;
+    position: fixed;
+    inset: 0;
+    z-index: 22;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 14px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.8s ease;
+    background: rgba(245, 240, 235, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .done-invite.visible {
@@ -266,12 +284,14 @@
   .typing-area.ready {
     animation: none;
     opacity: 1;
+    transform: translate(-50%, -50%);
   }
 
   /* ---- Typing area dimmed after done ---- */
   .typing-area.dimmed {
     animation: none;
     opacity: 0.2;
+    transform: translate(-50%, -50%);
     pointer-events: none;
     transition: opacity 1.5s ease;
   }
@@ -525,20 +545,36 @@
     font-size: 16px;
   }
 
-  /* ---- Pill hint (below witnessing text) ---- */
-  .pill-hint {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-style: italic;
-    color: var(--text-faint);
+  /* ---- Pill hints (below witnessing text) ---- */
+  .pill-hints {
+    margin-top: 14px;
     opacity: 0;
     transition: opacity 1s ease;
     pointer-events: none;
-    margin-top: 12px;
   }
 
-  .pill-hint.visible {
-    opacity: 0.85;
+  .pill-hints.visible {
+    opacity: 1;
+  }
+
+  .pill-hint-primary {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--text-soft);
+    letter-spacing: 0.01em;
+  }
+
+  .pill-hint-secondary {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text-faint);
+    margin-top: 4px;
+    letter-spacing: 0.01em;
+    transition: opacity 0.6s ease;
   }
 
   /* ---- Portrait actions (keep writing / start fresh) ---- */
@@ -595,7 +631,6 @@
     .framing { padding-top: 32px; }
     .typing-area { top: 30%; width: 88%; }
     .pill-pool { bottom: 16px; }
-    .done-invite { top: 52%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -632,8 +667,13 @@
     display: block;
   }
 
-  /* ---- "+ add your own" button ---- */
+  /* ---- "+ add your own" button (positioned above pill pool) ---- */
   .add-own-btn {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
     font-weight: 400;
@@ -649,14 +689,13 @@
     letter-spacing: 0.02em;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s ease;
-    margin-top: 12px;
-    display: inline-block;
+    transition: opacity 0.8s ease, bottom 0.5s ease;
+    white-space: nowrap;
   }
 
   .add-own-btn.visible {
     opacity: 1;
-    pointer-events: auto !important;
+    pointer-events: auto;
   }
 
   /* ---- Stream overlay ---- */
@@ -817,8 +856,10 @@
 <div class="error-flag" id="errorFlag"></div>
 
 <div class="framing" id="framing">
-  <p class="instruction">Let your thoughts move through you.</p>
-  <p class="contract">Type your stream of consciousness and allow yourself<br>to be unfiltered. Your entry will be saved.</p>
+  <div class="framing-inner">
+    <p class="instruction">Let your thoughts move through you.</p>
+    <p class="contract">Type your stream of consciousness and allow yourself<br>to be unfiltered. Your entry will be saved.</p>
+  </div>
 </div>
 
 <div class="void-canvas" id="voidCanvas">
@@ -841,13 +882,16 @@
       <p>Instead of focusing on what you wrote, take a moment to look at <em>how</em> you wrote it. These words were filtered for descriptive language that might reveal patterns or subconscious beliefs.</p>
       <p style="margin-top: 12px;">Pause here — what do you observe?</p>
     </div>
-    <p class="pill-hint" id="pillHint">tap a word to reveal its context</p>
+    <div class="pill-hints" id="pillHints">
+      <p class="pill-hint-primary" id="pillHintPrimary">tap a word to reveal its context</p>
+      <p class="pill-hint-secondary" id="pillHintSecondary">tap + hold to edit</p>
+    </div>
     <div class="portrait-actions" id="portraitActions">
       <button class="keep-writing-btn" id="keepWritingBtn" type="button">keep writing</button>
       <button class="start-fresh-btn" id="startFreshBtn" type="button">start fresh</button>
     </div>
-    <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
   </div>
+  <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
 </div>
 
 <div class="stream-overlay" id="streamOverlay">
@@ -1427,7 +1471,6 @@
   // Act state: 'VOID' → 'PORTRAIT' → 'STREAM' (and back)
   let currentAct = 'VOID';
   let firstPillSettled = false;
-  let editHintShown = false;
   let longPressTimer = null;
   let isEditMode = false;
 
@@ -2151,11 +2194,6 @@
     pill.classList.add('active');
     createContextElement(pill);
 
-    // After first pill tap, swap hint to explain long-press edit mode
-    if (!editHintShown && currentAct === 'PORTRAIT') {
-      editHintShown = true;
-      pillHint.textContent = 'hold a word to edit your portrait';
-    }
   }
 
   function createContextElement(pill) {
@@ -2309,7 +2347,9 @@
   //  FIRST-PILL + DONE INVITE — pause-triggered centered invite
   // ===========================================================================
 
-  const pillHint = document.getElementById('pillHint');
+  const pillHints = document.getElementById('pillHints');
+  const pillHintPrimary = document.getElementById('pillHintPrimary');
+  const pillHintSecondary = document.getElementById('pillHintSecondary');
   const addOwnBtn = document.getElementById('addOwnBtn');
   const doneInvite = document.getElementById('doneInvite');
   const doneBtn = document.getElementById('doneBtn');
@@ -2408,19 +2448,30 @@
     pill.addEventListener('mouseleave', cancelPress);
   }
 
+  function positionAddOwnBtn() {
+    // Place button just above the pill pool
+    const poolRect = pillPool.getBoundingClientRect();
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const poolTop = poolRect.top - canvasRect.top;
+    addOwnBtn.style.bottom = 'auto';
+    addOwnBtn.style.top = Math.max(poolTop - 52, canvasRect.height * 0.5) + 'px';
+  }
+
   function enterEditMode() {
     if (isEditMode) return;
     isEditMode = true;
     pillPool.classList.add('editable');
-    addOwnBtn.classList.add('visible');
-    pillHint.textContent = 'tap \u00d7 to remove, or add your own';
+    pillHintPrimary.textContent = 'tap \u00d7 to remove';
+    pillHintSecondary.style.opacity = '0';
     dismissContext();
   }
 
   function exitEditMode() {
     isEditMode = false;
     pillPool.classList.remove('editable');
-    addOwnBtn.classList.remove('visible');
+    pillHintPrimary.textContent = 'tap a word to reveal its context';
+    pillHintSecondary.textContent = 'tap + hold to edit';
+    pillHintSecondary.style.opacity = '';
   }
 
   function transitionToPortrait() {
@@ -2461,12 +2512,16 @@
       attachLongPress(pill);
     });
 
-    // Reset hint text and show pill hint + portrait actions
-    pillHint.textContent = 'tap a word to reveal its context';
-    editHintShown = false;
+    // Reset hints and show portrait UI
+    pillHintPrimary.textContent = 'tap a word to reveal its context';
+    pillHintSecondary.textContent = 'tap + hold to edit';
+    pillHintSecondary.style.opacity = '';
     setTimeout(() => {
-      pillHint.classList.add('visible');
+      pillHints.classList.add('visible');
       portraitActions.classList.add('visible');
+      addOwnBtn.classList.add('visible');
+      // Position add-own button just above pill pool
+      positionAddOwnBtn();
     }, 1500);
   }
 
@@ -2512,8 +2567,9 @@
 
     // Hide portrait UI
     witnessingText.classList.remove('visible');
-    pillHint.classList.remove('visible');
+    pillHints.classList.remove('visible');
     portraitActions.classList.remove('visible');
+    addOwnBtn.classList.remove('visible');
 
     // Un-dim typing area, restore cursor
     typingArea.classList.remove('dimmed');
@@ -2565,7 +2621,6 @@
     hintShown = false;
     underlineRemoved = false;
     hasStarted = false;
-    editHintShown = false;
 
     // Reset pill context
     pillContextStore.length = 0;
@@ -2595,9 +2650,14 @@
 
     // Reset DOM — portrait UI
     witnessingText.classList.remove('visible');
-    pillHint.textContent = 'tap a word to reveal its context';
-    pillHint.classList.remove('visible');
+    pillHintPrimary.textContent = 'tap a word to reveal its context';
+    pillHintSecondary.textContent = 'tap + hold to edit';
+    pillHintSecondary.style.opacity = '';
+    pillHints.classList.remove('visible');
     portraitActions.classList.remove('visible');
+    addOwnBtn.classList.remove('visible');
+    addOwnBtn.style.top = '';
+    addOwnBtn.style.bottom = '';
     hideDoneInvite();
 
     // Reset DOM — typing area (replay intro animation)
