@@ -420,7 +420,7 @@
 
   .pill-context.visible {
     opacity: 1;
-    max-height: 120px;
+    max-height: 160px;
     pointer-events: auto;
     cursor: pointer;
   }
@@ -483,24 +483,24 @@
     padding: 2px 0;
   }
 
-  .pill-context .depth-dots {
+  .pill-context .depth-more {
     display: flex;
     justify-content: center;
-    gap: 6px;
     margin-top: 10px;
-    padding-top: 4px;
   }
 
-  .pill-context .depth-dot {
-    width: 5px;
-    height: 5px;
+  .pill-context .depth-more-icon {
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: var(--text-ghost);
-    transition: background 0.3s ease;
-  }
-
-  .pill-context .depth-dot.active {
-    background: var(--linger);
+    border: 1px solid var(--linger-border);
+    color: var(--linger);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    text-align: center;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
   }
 
   @keyframes pillArrive {
@@ -1235,7 +1235,7 @@
       highlightEnd: end - l1.offset,
     });
 
-    if (l2.text.length > l1.text.length + 5) {
+    if (l2.text.length > l1.text.length) {
       levels.push({
         text: l2.text,
         highlightStart: start - l2.offset,
@@ -1243,7 +1243,7 @@
       });
     }
 
-    if (l3.text.length > (levels[levels.length - 1]?.text.length || 0) + 10) {
+    if (l3.text.length > (levels[levels.length - 1]?.text.length || 0)) {
       levels.push({
         text: l3.text,
         highlightStart: start - l3.offset,
@@ -1913,20 +1913,16 @@
     const level = levels[Math.min(depth, levels.length - 1)];
     const highlighted = buildHighlightedText(level);
 
-    // Dot indicator: one dot per level, current and previous are active
-    let dotsHtml = '';
-    if (levels.length > 1) {
-      const dots = [];
-      for (let d = 0; d < levels.length; d++) {
-        dots.push('<span class="depth-dot' + (d <= depth ? ' active' : '') + '"></span>');
-      }
-      dotsHtml = '<div class="depth-dots">' + dots.join('') + '</div>';
+    // Show circled + when more depth levels remain
+    let moreHtml = '';
+    if (levels.length > 1 && depth < levels.length - 1) {
+      moreHtml = '<div class="depth-more"><span class="depth-more-icon">+</span></div>';
     }
 
     contextEl.innerHTML = `
       <div class="pill-context-inner">
         <div class="context-text">${highlighted}</div>
-        ${dotsHtml}
+        ${moreHtml}
       </div>
     `;
 
