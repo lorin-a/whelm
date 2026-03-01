@@ -39,8 +39,6 @@
     text-align: center;
     z-index: 20;
     pointer-events: none;
-    opacity: 0;
-    animation: fadeIn 2.2s ease 0.3s forwards;
   }
 
   .framing p {
@@ -56,6 +54,8 @@
     color: var(--text);
     margin-bottom: 8px;
     line-height: 1.4;
+    opacity: 0;
+    animation: fadeIn 2s ease 0.3s forwards;
     transition: opacity 2s ease;
   }
 
@@ -64,19 +64,18 @@
     font-style: italic;
     color: var(--text-soft);
     font-size: 15px;
+    opacity: 0;
+    animation: fadeIn 2s ease 1.2s forwards;
     transition: opacity 2s ease;
   }
 
-  .framing.dimmed {
-    animation: none;
-    opacity: 1;
-  }
-
   .framing.dimmed .instruction {
+    animation: none;
     opacity: 0.35;
   }
 
   .framing.dimmed .contract {
+    animation: none;
     opacity: 0.7;
   }
 
@@ -104,6 +103,8 @@
     max-width: 460px;
     text-align: center;
     cursor: text;
+    opacity: 0;
+    animation: fadeIn 1.8s ease 2.4s forwards;
   }
 
   .typing-display {
@@ -255,23 +256,21 @@
     letter-spacing: 0.02em;
   }
 
-  .done-invite .done-hint {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 300;
-    font-style: italic;
-    color: var(--text-faint);
-    letter-spacing: 0.01em;
-  }
-
   /* ---- Passive pills during VOID act ---- */
   .pill-pool.passive .pill {
     pointer-events: none;
     cursor: default;
   }
 
+  /* ---- Typing area: after intro animation completes ---- */
+  .typing-area.ready {
+    animation: none;
+    opacity: 1;
+  }
+
   /* ---- Typing area dimmed after done ---- */
   .typing-area.dimmed {
+    animation: none;
     opacity: 0.2;
     pointer-events: none;
     transition: opacity 1.5s ease;
@@ -299,6 +298,14 @@
 
   .witnessing-text.visible {
     opacity: 1;
+  }
+
+  .witnessing-body {
+    background: rgba(92, 79, 107, 0.035);
+    border: 1px solid rgba(92, 79, 107, 0.1);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 6px;
   }
 
   /* ---- Falling pill ---- */
@@ -332,13 +339,15 @@
     flex-direction: column-reverse;
     align-items: center;
     gap: 6px;
-    min-width: 60px;
+    width: 92%;
+    max-width: 480px;
     overflow: visible;
   }
 
   .pill-row {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 8px;
     overflow: visible;
     position: relative;
@@ -532,6 +541,56 @@
     opacity: 0.85;
   }
 
+  /* ---- Portrait actions (keep writing / start fresh) ---- */
+  .portrait-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+  }
+
+  .portrait-actions.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .portrait-actions .keep-writing-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-soft);
+    background: transparent;
+    border: 1px solid var(--text-ghost);
+    padding: 10px 28px;
+    border-radius: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
+    letter-spacing: 0.02em;
+  }
+
+  .portrait-actions .start-fresh-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text-faint);
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
+    letter-spacing: 0.02em;
+  }
+
   @media (max-width: 600px) {
     .framing { padding-top: 32px; }
     .typing-area { top: 30%; width: 88%; }
@@ -544,6 +603,192 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.15s !important;
     }
+  }
+
+  /* ---- Pill dismiss button ---- */
+  .pill-dismiss {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--linger-border);
+    color: var(--text-faint);
+    font-size: 13px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 31;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .pill-pool.editable .pill .pill-dismiss {
+    display: block;
+  }
+
+  /* ---- "+ add your own" button ---- */
+  .add-own-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 10px 24px;
+    border-radius: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    margin-top: 12px;
+    display: inline-block;
+  }
+
+  .add-own-btn.visible {
+    opacity: 1;
+    pointer-events: auto !important;
+  }
+
+  /* ---- Stream overlay ---- */
+  .stream-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(245, 240, 235, 0.97);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .stream-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .stream-header {
+    padding: 44px 24px 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .stream-header h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-soft);
+    font-style: italic;
+    letter-spacing: 0.02em;
+  }
+
+  .stream-close {
+    position: absolute;
+    top: 40px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 22px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 26;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .stream-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 24px 120px;
+  }
+
+  .stream-content {
+    max-width: 460px;
+    margin: 0 auto;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 2;
+    color: var(--text);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .stream-word {
+    display: inline;
+    padding: 2px 0;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s ease;
+  }
+
+  .stream-word.system-detected {
+    background: rgba(92, 79, 107, 0.07);
+    border-radius: 3px;
+  }
+
+  .stream-word.selected {
+    background: rgba(92, 79, 107, 0.18);
+    border-radius: 3px;
+  }
+
+  .stream-word.promoted {
+    color: var(--text-ghost);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-ghost);
+  }
+
+  /* ---- Approve button (floating near selection) ---- */
+  .stream-approve-btn {
+    position: absolute;
+    z-index: 27;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 6px 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 36px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .stream-approve-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 600px) {
+    .stream-header { padding-top: 32px; }
+    .stream-close { top: 28px; }
+    .stream-scroll { padding: 0 20px 120px; }
   }
 
   /* Debug error indicator */
@@ -590,13 +835,30 @@
       <button class="done-btn" id="doneBtn" type="button">i'm done</button>
       <button class="keep-btn" id="keepBtn" type="button">keep typing</button>
     </div>
-    <span class="done-hint">your words are held below</span>
   </div>
   <div class="witnessing-text" id="witnessingText">
-    <p>Instead of focusing on what you wrote, take a moment to look at <em>how</em> you wrote it. These words were filtered for descriptive language that might reveal patterns or subconscious beliefs.</p>
-    <p style="margin-top: 12px;">Pause here — what do you observe?</p>
+    <div class="witnessing-body">
+      <p>Instead of focusing on what you wrote, take a moment to look at <em>how</em> you wrote it. These words were filtered for descriptive language that might reveal patterns or subconscious beliefs.</p>
+      <p style="margin-top: 12px;">Pause here — what do you observe?</p>
+    </div>
     <p class="pill-hint" id="pillHint">tap a word to reveal its context</p>
+    <div class="portrait-actions" id="portraitActions">
+      <button class="keep-writing-btn" id="keepWritingBtn" type="button">keep writing</button>
+      <button class="start-fresh-btn" id="startFreshBtn" type="button">start fresh</button>
+    </div>
+    <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
   </div>
+</div>
+
+<div class="stream-overlay" id="streamOverlay">
+  <div class="stream-header">
+    <h2>your words, unfiltered</h2>
+  </div>
+  <button class="stream-close" id="streamCloseBtn" type="button" aria-label="Close">&times;</button>
+  <div class="stream-scroll">
+    <div class="stream-content" id="streamContent"></div>
+  </div>
+  <div class="stream-approve-btn" id="streamApproveBtn">add</div>
 </div>
 
 <textarea class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -1159,9 +1421,15 @@
   let hasStarted = false;
   const TRAIL_DISTANCE = 2;
 
-  // Act state: 'VOID' (typing, pills passive) → 'PORTRAIT' (pills interactive)
+  // Transcript accumulation — captures full stream across sessions
+  let transcript = '';
+
+  // Act state: 'VOID' → 'PORTRAIT' → 'STREAM' (and back)
   let currentAct = 'VOID';
   let firstPillSettled = false;
+  let editHintShown = false;
+  let longPressTimer = null;
+  let isEditMode = false;
 
   // Transcript store — per-pill context snapshots
   const pillContextStore = [];
@@ -1304,8 +1572,14 @@
 
   voidCanvas.addEventListener('click', focusInput);
   voidCanvas.addEventListener('touchstart', () => focusInput(), { passive: true });
-  setTimeout(focusInput, 600);
-  setTimeout(focusInput, 1500);
+  // Delay focus until typing area has faded in (~2.4s delay + 1.8s animation)
+  setTimeout(focusInput, 3000);
+  setTimeout(focusInput, 4500);
+
+  // Mark typing area as ready once intro animation completes (so transitions work)
+  typingArea.addEventListener('animationend', () => {
+    typingArea.classList.add('ready');
+  });
 
   // SINGLE input handler — replaces the duplicate listeners
   hiddenInput.addEventListener('input', onInput);
@@ -1635,6 +1909,9 @@
         setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
       });
 
+      // Accumulate transcript before clearing
+      transcript += fullText;
+
       fullText = '';
       words = [];
       releasedUpTo = 0;
@@ -1642,6 +1919,7 @@
       renderTypingLine();
     } catch (err) {
       showError('forceReleaseAll', err);
+      transcript += fullText;
       fullText = '';
       words = [];
       releasedUpTo = 0;
@@ -1773,7 +2051,8 @@
   // ===========================================================================
 
   let pileRows = [];
-  const ROW_PATTERN = [3, 2, 3, 2, 1, 2, 3, 1, 2];
+  // Pyramid: wide base rows, narrowing toward top, with organic variation
+  const ROW_PATTERN = [4, 4, 3, 3, 2, 2, 1, 2, 3, 3, 4, 4, 3, 2, 1];
   let currentRowIdx = 0;
   let currentRowCount = 0;
 
@@ -1797,12 +2076,13 @@
 
     const poolPill = document.createElement('span');
     poolPill.className = 'pill' + (isStacking ? ' stacking-pill' : '');
-    if (currentAct === 'PORTRAIT') {
+    if (currentAct === 'PORTRAIT' || currentAct === 'STREAM') {
       poolPill.classList.add('tappable');
       poolPill.addEventListener('click', (e) => {
         e.stopPropagation();
         handlePillTap(e);
       });
+      attachLongPress(poolPill);
     }
     poolPill.textContent = clean;
     poolPill.style.opacity = '0';
@@ -1810,6 +2090,18 @@
     poolPill.style.setProperty('--pill-nudge', nudge + 'px');
     poolPill.dataset.pillLabel = word;
     poolPill.dataset.isStacking = isStacking ? '1' : '0';
+
+    // Dismiss button
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'pill-dismiss';
+    dismissBtn.textContent = '\u00d7';
+    dismissBtn.setAttribute('aria-label', 'Remove');
+    dismissBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handlePillDismiss(poolPill);
+    });
+    poolPill.appendChild(dismissBtn);
+
     pileRows[pileRows.length - 1].appendChild(poolPill);
     currentRowCount++;
 
@@ -1858,6 +2150,12 @@
     activePillDepth = 0;
     pill.classList.add('active');
     createContextElement(pill);
+
+    // After first pill tap, swap hint to explain long-press edit mode
+    if (!editHintShown && currentAct === 'PORTRAIT') {
+      editHintShown = true;
+      pillHint.textContent = 'hold a word to edit your portrait';
+    }
   }
 
   function createContextElement(pill) {
@@ -2012,6 +2310,7 @@
   // ===========================================================================
 
   const pillHint = document.getElementById('pillHint');
+  const addOwnBtn = document.getElementById('addOwnBtn');
   const doneInvite = document.getElementById('doneInvite');
   const doneBtn = document.getElementById('doneBtn');
   let hintShown = false;
@@ -2066,6 +2365,64 @@
     transitionToPortrait();
   }
 
+  // ===========================================================================
+  //  EDIT MODE — Long-press to reveal dismiss badges + "add your own"
+  // ===========================================================================
+
+  function attachLongPress(pill) {
+    let pressTimer = null;
+    let startX = 0, startY = 0;
+
+    function startPress(x, y) {
+      startX = x;
+      startY = y;
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        enterEditMode();
+      }, 500);
+    }
+
+    function cancelPress() {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    }
+
+    function moveCheck(x, y) {
+      if (pressTimer && (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10)) {
+        cancelPress();
+      }
+    }
+
+    pill.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startPress(t.clientX, t.clientY);
+    }, { passive: true });
+    pill.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      moveCheck(t.clientX, t.clientY);
+    }, { passive: true });
+    pill.addEventListener('touchend', cancelPress);
+    pill.addEventListener('touchcancel', cancelPress);
+    pill.addEventListener('mousedown', (e) => { startPress(e.clientX, e.clientY); });
+    pill.addEventListener('mousemove', (e) => { moveCheck(e.clientX, e.clientY); });
+    pill.addEventListener('mouseup', cancelPress);
+    pill.addEventListener('mouseleave', cancelPress);
+  }
+
+  function enterEditMode() {
+    if (isEditMode) return;
+    isEditMode = true;
+    pillPool.classList.add('editable');
+    addOwnBtn.classList.add('visible');
+    pillHint.textContent = 'tap \u00d7 to remove, or add your own';
+    dismissContext();
+  }
+
+  function exitEditMode() {
+    isEditMode = false;
+    pillPool.classList.remove('editable');
+    addOwnBtn.classList.remove('visible');
+  }
+
   function transitionToPortrait() {
     currentAct = 'PORTRAIT';
 
@@ -2092,7 +2449,7 @@
       witnessingText.classList.add('visible');
     }, 800);
 
-    // Activate pills — remove passive, add click handlers
+    // Activate pills — remove passive, add click + long-press handlers
     pillPool.classList.remove('passive');
     const allPills = pillPool.querySelectorAll('.pill');
     allPills.forEach(pill => {
@@ -2101,15 +2458,22 @@
         e.stopPropagation();
         handlePillTap(e);
       });
+      attachLongPress(pill);
     });
 
-    // Show pill hint
+    // Reset hint text and show pill hint + portrait actions
+    pillHint.textContent = 'tap a word to reveal its context';
+    editHintShown = false;
     setTimeout(() => {
       pillHint.classList.add('visible');
+      portraitActions.classList.add('visible');
     }, 1500);
   }
 
   const keepBtn = document.getElementById('keepBtn');
+  const portraitActions = document.getElementById('portraitActions');
+  const keepWritingBtn = document.getElementById('keepWritingBtn');
+  const startFreshBtn = document.getElementById('startFreshBtn');
 
   doneBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -2120,6 +2484,413 @@
     e.stopPropagation();
     hideDoneInvite();
     hiddenInput.focus();
+  });
+
+  keepWritingBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    returnToVoid();
+  });
+
+  startFreshBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearAll();
+  });
+
+
+  // ===========================================================================
+  //  RETURN TO VOID — Go back to typing, preserve all pill state
+  // ===========================================================================
+
+  function returnToVoid() {
+    // Close stream overlay if open
+    if (currentAct === 'STREAM') closeStream();
+
+    currentAct = 'VOID';
+
+    // Exit edit mode
+    exitEditMode();
+
+    // Hide portrait UI
+    witnessingText.classList.remove('visible');
+    pillHint.classList.remove('visible');
+    portraitActions.classList.remove('visible');
+
+    // Un-dim typing area, restore cursor
+    typingArea.classList.remove('dimmed');
+    cursorEl.style.display = '';
+
+    // Restore framing (dimmed since hasStarted is true)
+    framing.classList.add('dimmed');
+    framing.querySelector('.instruction').style.opacity = '';
+    framing.querySelector('.contract').style.opacity = '';
+
+    // Make pills passive again
+    pillPool.classList.add('passive');
+    const allPills = pillPool.querySelectorAll('.pill');
+    allPills.forEach(pill => {
+      pill.classList.remove('tappable');
+    });
+
+    // Dismiss any open pill context
+    dismissContext();
+
+    // Re-focus input
+    hiddenInput.focus();
+  }
+
+
+  // ===========================================================================
+  //  CLEAR ALL — Reset everything to initial state
+  // ===========================================================================
+
+  function clearAll() {
+    if (!confirm('Start fresh? Your words will be cleared.')) return;
+
+    // Close stream if open
+    if (currentAct === 'STREAM') closeStream();
+
+    // Reset act
+    currentAct = 'VOID';
+
+    // Reset text state
+    fullText = '';
+    words = [];
+    releasedUpTo = 0;
+    hiddenInput.value = '';
+    transcript = '';
+
+    // Reset collection state
+    collectedPool = new Set();
+    firstPillSettled = false;
+    hintShown = false;
+    underlineRemoved = false;
+    hasStarted = false;
+    editHintShown = false;
+
+    // Reset pill context
+    pillContextStore.length = 0;
+    activePill = null;
+    activePillDepth = 0;
+    if (activeContextEl) { activeContextEl.remove(); activeContextEl = null; }
+
+    // Reset pile layout
+    pileRows = [];
+    currentRowIdx = 0;
+    currentRowCount = 0;
+
+    // Clear timers
+    if (punctTimer) clearTimeout(punctTimer);
+    if (pauseTimer) clearTimeout(pauseTimer);
+    if (doneInviteTimer) clearTimeout(doneInviteTimer);
+    punctTimer = null;
+    pauseTimer = null;
+    doneInviteTimer = null;
+
+    // Exit edit mode
+    exitEditMode();
+
+    // Reset DOM — pill pool
+    pillPool.innerHTML = '';
+    pillPool.classList.add('passive');
+
+    // Reset DOM — portrait UI
+    witnessingText.classList.remove('visible');
+    pillHint.textContent = 'tap a word to reveal its context';
+    pillHint.classList.remove('visible');
+    portraitActions.classList.remove('visible');
+    hideDoneInvite();
+
+    // Reset DOM — typing area (replay intro animation)
+    typingArea.classList.remove('dimmed', 'ready');
+    cursorEl.style.display = '';
+    typingDisplayEl.classList.remove('has-text');
+
+    // Reset framing to initial state — replay staggered fade-in
+    framing.classList.remove('dimmed');
+    const instrEl = framing.querySelector('.instruction');
+    const contractEl = framing.querySelector('.contract');
+    instrEl.style.animation = 'none';
+    contractEl.style.animation = 'none';
+    instrEl.style.opacity = '';
+    contractEl.style.opacity = '';
+    // Force reflow to restart animations
+    void instrEl.offsetWidth;
+    instrEl.style.animation = '';
+    contractEl.style.animation = '';
+
+    // Reset typing area animation
+    typingArea.style.animation = 'none';
+    void typingArea.offsetWidth;
+    typingArea.style.animation = '';
+
+    // Clear rain
+    rainParticles.length = 0;
+
+    // Re-render and delay focus to match intro timing
+    renderTypingLine();
+    setTimeout(() => hiddenInput.focus(), 3000);
+  }
+
+
+  // ===========================================================================
+  //  PILL DISMISS — Remove a pill from the cairn
+  // ===========================================================================
+
+  function handlePillDismiss(pill) {
+    const label = pill.dataset.pillLabel;
+    const isStacking = pill.dataset.isStacking === '1';
+
+    // Remove from collectedPool (stacking pills aren't tracked there)
+    if (!isStacking) collectedPool.delete(label);
+
+    // Animate out
+    pill.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    pill.style.opacity = '0';
+    pill.style.transform = 'scale(0.8)';
+    setTimeout(() => pill.remove(), 300);
+  }
+
+
+  // ===========================================================================
+  //  STREAM OVERLAY — See everything, tap-drag-approve selection
+  // ===========================================================================
+
+  const streamOverlay = document.getElementById('streamOverlay');
+  const streamContent = document.getElementById('streamContent');
+  const streamCloseBtn = document.getElementById('streamCloseBtn');
+  const streamApproveBtn = document.getElementById('streamApproveBtn');
+
+  // Stream selection state
+  let streamWordSpans = [];
+  let streamSelection = null; // { anchorIdx, currentIdx }
+  let isDragging = false;
+
+  function openStream() {
+    currentAct = 'STREAM';
+    dismissContext();
+    renderStreamContent();
+    streamOverlay.classList.add('visible');
+  }
+
+  function closeStream() {
+    streamOverlay.classList.remove('visible');
+    clearStreamSelection();
+    streamApproveBtn.classList.remove('visible');
+    if (currentAct === 'STREAM') currentAct = 'PORTRAIT';
+  }
+
+  function renderStreamContent() {
+    streamContent.innerHTML = '';
+    streamWordSpans = [];
+
+    if (!transcript || transcript.trim().length === 0) {
+      streamContent.textContent = 'Nothing here yet.';
+      return;
+    }
+
+    // Parse transcript to identify system-detected words
+    const parsedWords = parseWords(transcript);
+    const chargedRanges = [];
+    for (const w of parsedWords) {
+      if (w.isCharged) {
+        chargedRanges.push({ start: w.startIdx, end: w.endIdx });
+      }
+    }
+
+    function isInChargedRange(charIdx) {
+      for (const r of chargedRanges) {
+        if (charIdx >= r.start && charIdx < r.end) return true;
+      }
+      return false;
+    }
+
+    // Split transcript into tokens (words + whitespace)
+    const tokenRegex = /(\S+|\s+)/g;
+    let match;
+    let charOffset = 0;
+    let spanIdx = 0;
+
+    while ((match = tokenRegex.exec(transcript)) !== null) {
+      const token = match[1];
+      const tokenStart = match.index;
+
+      if (/^\s+$/.test(token)) {
+        // Whitespace — render as text node
+        streamContent.appendChild(document.createTextNode(token));
+      } else {
+        // Word token — wrap in a span
+        const span = document.createElement('span');
+        span.className = 'stream-word';
+        span.textContent = token;
+        span.dataset.idx = spanIdx;
+        span.dataset.charStart = tokenStart;
+        span.dataset.charEnd = tokenStart + token.length;
+
+        // Check if any character in this token is within a charged range
+        if (isInChargedRange(tokenStart)) {
+          span.classList.add('system-detected');
+        }
+
+        streamContent.appendChild(span);
+        streamWordSpans.push(span);
+        spanIdx++;
+      }
+    }
+  }
+
+  // Tap-drag selection
+  function getWordSpanFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    if (el.classList && el.classList.contains('stream-word')) return el;
+    if (el.parentElement && el.parentElement.classList && el.parentElement.classList.contains('stream-word')) return el.parentElement;
+    return null;
+  }
+
+  function clearStreamSelection() {
+    streamWordSpans.forEach(s => s.classList.remove('selected'));
+    streamSelection = null;
+    isDragging = false;
+  }
+
+  function highlightRange(fromIdx, toIdx) {
+    const lo = Math.min(fromIdx, toIdx);
+    const hi = Math.max(fromIdx, toIdx);
+    streamWordSpans.forEach((s, i) => {
+      if (i >= lo && i <= hi) s.classList.add('selected');
+      else s.classList.remove('selected');
+    });
+  }
+
+  function showApproveButton() {
+    if (!streamSelection) return;
+    const lo = Math.min(streamSelection.anchorIdx, streamSelection.currentIdx);
+    const hi = Math.max(streamSelection.anchorIdx, streamSelection.currentIdx);
+    const lastSpan = streamWordSpans[hi];
+    if (!lastSpan) return;
+
+    const rect = lastSpan.getBoundingClientRect();
+    const overlayRect = streamOverlay.getBoundingClientRect();
+    streamApproveBtn.style.left = Math.min(rect.right - overlayRect.left + 8, overlayRect.width - 70) + 'px';
+    streamApproveBtn.style.top = (rect.top - overlayRect.top - 4) + 'px';
+    streamApproveBtn.classList.add('visible');
+  }
+
+  function handleStreamApprove() {
+    if (!streamSelection) return;
+    const lo = Math.min(streamSelection.anchorIdx, streamSelection.currentIdx);
+    const hi = Math.max(streamSelection.anchorIdx, streamSelection.currentIdx);
+
+    // Build label from selected words
+    const selectedWords = [];
+    for (let i = lo; i <= hi; i++) {
+      selectedWords.push(streamWordSpans[i].textContent);
+    }
+    const label = selectedWords.join(' ').toLowerCase().trim();
+    if (!label) { clearStreamSelection(); streamApproveBtn.classList.remove('visible'); return; }
+
+    // Get position of the last selected word for pill origin
+    const lastSpan = streamWordSpans[hi];
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const spanRect = lastSpan.getBoundingClientRect();
+    const fromX = spanRect.left - canvasRect.left + spanRect.width / 2;
+    const fromY = spanRect.bottom - canvasRect.top;
+
+    // Drop as new pill
+    dropPill(label, fromX, fromY, false);
+
+    // Mark as promoted
+    for (let i = lo; i <= hi; i++) {
+      streamWordSpans[i].classList.add('promoted');
+      streamWordSpans[i].classList.remove('selected');
+    }
+
+    streamApproveBtn.classList.remove('visible');
+    streamSelection = null;
+    isDragging = false;
+  }
+
+  // Event listeners for stream interaction
+  streamCloseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeStream();
+  });
+
+  addOwnBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openStream();
+  });
+
+  streamApproveBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleStreamApprove();
+  });
+
+  // Touch/mouse selection on stream content
+  streamContent.addEventListener('mousedown', (e) => {
+    const span = getWordSpanFromPoint(e.clientX, e.clientY);
+    if (!span || span.classList.contains('promoted')) return;
+    e.preventDefault();
+    clearStreamSelection();
+    streamApproveBtn.classList.remove('visible');
+    const idx = parseInt(span.dataset.idx);
+    streamSelection = { anchorIdx: idx, currentIdx: idx };
+    isDragging = true;
+    highlightRange(idx, idx);
+  });
+
+  streamContent.addEventListener('mousemove', (e) => {
+    if (!isDragging || !streamSelection) return;
+    const span = getWordSpanFromPoint(e.clientX, e.clientY);
+    if (!span) return;
+    const idx = parseInt(span.dataset.idx);
+    streamSelection.currentIdx = idx;
+    highlightRange(streamSelection.anchorIdx, idx);
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (!isDragging || !streamSelection) return;
+    isDragging = false;
+    showApproveButton();
+  });
+
+  streamContent.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const span = getWordSpanFromPoint(touch.clientX, touch.clientY);
+    if (!span || span.classList.contains('promoted')) return;
+    clearStreamSelection();
+    streamApproveBtn.classList.remove('visible');
+    const idx = parseInt(span.dataset.idx);
+    streamSelection = { anchorIdx: idx, currentIdx: idx };
+    isDragging = true;
+    highlightRange(idx, idx);
+  }, { passive: true });
+
+  streamContent.addEventListener('touchmove', (e) => {
+    if (!isDragging || !streamSelection) return;
+    const touch = e.touches[0];
+    const span = getWordSpanFromPoint(touch.clientX, touch.clientY);
+    if (!span) return;
+    const idx = parseInt(span.dataset.idx);
+    streamSelection.currentIdx = idx;
+    highlightRange(streamSelection.anchorIdx, idx);
+    e.preventDefault();
+  }, { passive: false });
+
+  streamContent.addEventListener('touchend', (e) => {
+    if (!isDragging || !streamSelection) return;
+    isDragging = false;
+    showApproveButton();
+  });
+
+  // Tap elsewhere in stream overlay dismisses selection
+  streamOverlay.addEventListener('click', (e) => {
+    if (e.target === streamOverlay || e.target.classList.contains('stream-scroll') || e.target.classList.contains('stream-content')) {
+      if (streamSelection && !isDragging) {
+        clearStreamSelection();
+        streamApproveBtn.classList.remove('visible');
+      }
+    }
   });
 
 
