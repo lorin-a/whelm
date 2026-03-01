@@ -2520,10 +2520,9 @@
     if (punctTimer) clearTimeout(punctTimer);
     if (pauseTimer) clearTimeout(pauseTimer);
 
-    // Update framing text
-    framing.classList.remove('dimmed');
-    framing.querySelector('.instruction').style.opacity = '0';
-    framing.querySelector('.contract').style.opacity = '0';
+    // Hide framing entirely in portrait
+    framing.style.opacity = '0';
+    framing.style.transition = 'opacity 0.8s ease';
 
     // Show witnessing text
     setTimeout(() => {
@@ -2607,9 +2606,9 @@
     cursorEl.style.display = '';
 
     // Restore framing (dimmed since hasStarted is true)
+    framing.style.opacity = '';
+    framing.style.transition = '';
     framing.classList.add('dimmed');
-    framing.querySelector('.instruction').style.opacity = '';
-    framing.querySelector('.contract').style.opacity = '';
 
     // Make pills passive again, restore wabi-sabi layout
     pillPool.classList.add('passive');
@@ -2699,6 +2698,8 @@
     typingDisplayEl.classList.remove('has-text');
 
     // Reset framing to initial state — replay staggered fade-in
+    framing.style.opacity = '';
+    framing.style.transition = '';
     framing.classList.remove('dimmed');
     const instrEl = framing.querySelector('.instruction');
     const contractEl = framing.querySelector('.contract');
