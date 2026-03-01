@@ -777,7 +777,7 @@
   }
 
   .stream-header {
-    padding: 44px 24px 16px;
+    padding: 44px 24px 12px;
     text-align: center;
     flex-shrink: 0;
   }
@@ -785,10 +785,29 @@
   .stream-header h2 {
     font-family: 'DM Sans', sans-serif;
     font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+
+  .stream-header .stream-instruction {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
     font-weight: 300;
     color: var(--text-soft);
+    line-height: 1.6;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  .stream-header .stream-hint {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
     font-style: italic;
-    letter-spacing: 0.02em;
+    color: var(--text-faint);
+    margin-top: 10px;
   }
 
   .stream-close {
@@ -846,8 +865,10 @@
   }
 
   .stream-word.selected {
-    background: rgba(92, 79, 107, 0.18);
+    background: rgba(92, 79, 107, 0.22);
     border-radius: 3px;
+    color: var(--linger);
+    font-weight: 400;
   }
 
   .stream-word.promoted {
@@ -862,16 +883,16 @@
     z-index: 27;
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
-    font-weight: 400;
-    color: var(--linger);
-    background: var(--linger-bg);
-    border: 1px solid var(--linger-border);
-    padding: 6px 16px;
-    border-radius: 16px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--linger);
+    border: 1px solid var(--linger);
+    padding: 8px 20px;
+    border-radius: 20px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    min-height: 36px;
+    min-height: 40px;
     letter-spacing: 0.02em;
     white-space: nowrap;
     opacity: 0;
@@ -956,12 +977,14 @@
 <div class="stream-overlay" id="streamOverlay">
   <div class="stream-header">
     <h2>your words, unfiltered</h2>
+    <p class="stream-instruction">Drag across words or phrases that feel important to you. They'll be added to your portrait.</p>
+    <p class="stream-hint">highlighted words were already detected</p>
   </div>
   <button class="stream-close" id="streamCloseBtn" type="button" aria-label="Close">&times;</button>
   <div class="stream-scroll">
     <div class="stream-content" id="streamContent"></div>
   </div>
-  <div class="stream-approve-btn" id="streamApproveBtn">add</div>
+  <div class="stream-approve-btn" id="streamApproveBtn">+ add to portrait</div>
 </div>
 
 <textarea class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -2296,6 +2319,7 @@
       });
     }
 
+    contextJustOpened = true;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         contextEl.classList.add('visible');
@@ -2370,8 +2394,10 @@
     return str.slice(0, cut > 0 ? cut : maxLen) + '…';
   }
 
-  // Dismiss context on tap elsewhere
+  // Dismiss context on tap elsewhere (with guard to prevent immediate dismissal)
+  let contextJustOpened = false;
   document.addEventListener('click', (e) => {
+    if (contextJustOpened) { contextJustOpened = false; return; }
     if (activePill && !activePill.contains(e.target)) {
       dismissContext();
     }
