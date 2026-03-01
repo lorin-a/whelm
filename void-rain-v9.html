@@ -601,64 +601,68 @@
     transition: opacity 0.6s ease;
   }
 
-  /* ---- Portrait actions (fixed at bottom) ---- */
-  .portrait-actions {
+  /* ---- Back arrow (portrait top-left) ---- */
+  .back-btn {
     position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
-    z-index: 15;
+    top: 44px;
+    left: 16px;
+    z-index: 16;
+    width: 44px;
+    height: 44px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-soft);
+    font-size: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 1s ease;
+    transition: opacity 0.8s ease;
   }
 
-  .portrait-actions.visible {
+  .back-btn.visible {
     opacity: 1;
     pointer-events: auto;
   }
 
-  .portrait-actions .keep-writing-btn {
+  /* ---- Clear all button (void page) ---- */
+  .clear-all-btn {
+    position: absolute;
+    top: 44px;
+    right: 16px;
+    z-index: 16;
     font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 300;
-    color: var(--text-soft);
-    background: transparent;
-    border: 1px solid var(--text-ghost);
-    padding: 10px 28px;
-    border-radius: 24px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    min-height: 44px;
-    min-width: 44px;
-    letter-spacing: 0.02em;
-  }
-
-  .portrait-actions .start-fresh-btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 300;
     color: var(--text-faint);
     background: transparent;
     border: none;
-    padding: 10px 16px;
+    padding: 10px 12px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     min-height: 44px;
     min-width: 44px;
-    letter-spacing: 0.02em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+
+  .clear-all-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   @media (max-width: 600px) {
     .framing { padding-top: 32px; }
     .typing-area { top: 30%; width: 88%; }
     .pill-pool { bottom: 16px; }
+    .back-btn { top: 32px; left: 8px; }
+    .clear-all-btn { top: 32px; right: 8px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -914,10 +918,8 @@
       <p class="pill-hint-secondary" id="pillHintSecondary">tap + hold to edit</p>
     </div>
   </div>
-  <div class="portrait-actions" id="portraitActions">
-    <button class="keep-writing-btn" id="keepWritingBtn" type="button">keep writing</button>
-    <button class="start-fresh-btn" id="startFreshBtn" type="button">start fresh</button>
-  </div>
+  <button class="back-btn" id="backBtn" type="button" aria-label="Back to writing">&#8592;</button>
+  <button class="clear-all-btn" id="clearAllBtn" type="button">clear all</button>
   <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
 </div>
 
@@ -2402,6 +2404,7 @@
       setTimeout(() => {
         if (currentAct === 'VOID') {
           firstPillSettled = true;
+          clearAllBtn.classList.add('visible');
           // Start invite timer if user is idle (no pending timer from onInput)
           if (!doneInviteTimer) {
             doneInviteTimer = setTimeout(() => {
@@ -2544,19 +2547,21 @@
     pillHintPrimary.textContent = 'tap a word to reveal its context';
     pillHintSecondary.textContent = 'tap + hold to edit';
     pillHintSecondary.style.opacity = '';
+    // Hide clear-all (void-only)
+    clearAllBtn.classList.remove('visible');
+
     setTimeout(() => {
       pillHints.classList.add('visible');
-      portraitActions.classList.add('visible');
+      backBtn.classList.add('visible');
       addOwnBtn.classList.add('visible');
-      // Position add-own button just above pill pool
+      // Position add-own button just below pill grid
       positionAddOwnBtn();
     }, 1500);
   }
 
   const keepBtn = document.getElementById('keepBtn');
-  const portraitActions = document.getElementById('portraitActions');
-  const keepWritingBtn = document.getElementById('keepWritingBtn');
-  const startFreshBtn = document.getElementById('startFreshBtn');
+  const backBtn = document.getElementById('backBtn');
+  const clearAllBtn = document.getElementById('clearAllBtn');
 
   doneBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -2569,12 +2574,12 @@
     hiddenInput.focus();
   });
 
-  keepWritingBtn.addEventListener('click', (e) => {
+  backBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     returnToVoid();
   });
 
-  startFreshBtn.addEventListener('click', (e) => {
+  clearAllBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     clearAll();
   });
@@ -2596,8 +2601,14 @@
     // Hide portrait UI
     witnessingText.classList.remove('visible');
     pillHints.classList.remove('visible');
-    portraitActions.classList.remove('visible');
+    backBtn.classList.remove('visible');
     addOwnBtn.classList.remove('visible');
+    addOwnBtn.style.top = '';
+
+    // Show clear-all on void if pills exist
+    if (pillPool.querySelectorAll('.pill').length > 0) {
+      clearAllBtn.classList.add('visible');
+    }
 
     // Un-dim typing area, restore cursor
     typingArea.classList.remove('dimmed');
@@ -2684,10 +2695,10 @@
     pillHintSecondary.textContent = 'tap + hold to edit';
     pillHintSecondary.style.opacity = '';
     pillHints.classList.remove('visible');
-    portraitActions.classList.remove('visible');
+    backBtn.classList.remove('visible');
+    clearAllBtn.classList.remove('visible');
     addOwnBtn.classList.remove('visible');
     addOwnBtn.style.top = '';
-    addOwnBtn.style.bottom = '';
     hideDoneInvite();
 
     // Reset DOM — typing area (replay intro animation)
