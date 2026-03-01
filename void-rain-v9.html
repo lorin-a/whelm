@@ -485,23 +485,22 @@
 
   /* ---- Pill hint ---- */
   .pill-hint {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
+    position: relative;
+    order: 1;
+    z-index: 12;
     font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
+    font-size: 16px;
     font-style: italic;
     color: var(--text-faint);
     opacity: 0;
     transition: opacity 1s ease;
     pointer-events: none;
     white-space: nowrap;
+    margin-bottom: 8px;
   }
 
   .pill-hint.visible {
-    opacity: 1;
+    opacity: 0.85;
   }
 
   @media (max-width: 600px) {
@@ -545,7 +544,7 @@
 
 <div class="framing" id="framing">
   <p class="instruction">Let your thoughts move through you.</p>
-  <p class="contract">The story will fall away. The feelings will stay.</p>
+  <p class="contract">Type your stream of consciousness and allow yourself to be unfiltered. Your entry will be saved.</p>
 </div>
 
 <div class="void-canvas" id="voidCanvas">
@@ -556,14 +555,16 @@
       <span class="cursor-blink" id="cursor"></span>
     </div>
   </div>
-  <div class="pill-pool passive" id="pillPool"></div>
-  <div class="pill-hint" id="pillHint">tap a word to see its story</div>
+  <div class="pill-pool passive" id="pillPool">
+    <div class="pill-hint" id="pillHint">tap a word to reveal its context</div>
+  </div>
   <div class="done-invite" id="doneInvite">
     <button class="done-btn" id="doneBtn" type="button">i'm done</button>
     <span class="done-hint">your words are held below</span>
   </div>
   <div class="witnessing-text" id="witnessingText">
-    <p>This is how you're speaking to yourself right now.</p>
+    <p>Instead of focusing on what you wrote, take a moment to look at <em>how</em> you wrote it. These words were filtered for descriptive language that might reveal patterns or subconscious beliefs.</p>
+    <p style="margin-top: 12px;">Pause here — what do you observe?</p>
   </div>
 </div>
 
@@ -2075,7 +2076,6 @@
   if (window.visualViewport) {
     let keyboardRAF = null;
     const originalPillPoolBottom = getComputedStyle(pillPool).bottom;
-    const originalPillHintBottom = getComputedStyle(pillHint).bottom;
 
     function handleViewportResize() {
       if (keyboardRAF) return;
@@ -2085,13 +2085,11 @@
         if (keyboardHeight > 100) {
           // Keyboard is open — shift pill pool up
           pillPool.style.bottom = (parseInt(originalPillPoolBottom) + keyboardHeight) + 'px';
-          pillHint.style.bottom = (parseInt(originalPillHintBottom) + keyboardHeight) + 'px';
           framing.style.opacity = '0';
           framing.style.pointerEvents = 'none';
         } else {
           // Keyboard closed — restore
           pillPool.style.bottom = '';
-          pillHint.style.bottom = '';
           framing.style.opacity = '';
           framing.style.pointerEvents = '';
         }
