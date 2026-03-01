@@ -1,8 +1,10 @@
 # CLAUDE.md — Whelm Void Prototype
 
-You are working on Whelm, a trauma-informed digital wellness tool. This branch
-contains the "void" prototype — the brain dump step where users pour out overwhelm
-and see their emotionally charged words distilled from dissolving narrative.
+You are working on Whelm, a trauma-informed digital wellness tool. Whelm doesn't
+help people manage their overwhelm — it helps them find themselves inside it. The app
+untangles the person from the situation, not the situation itself. This branch contains
+the "void" prototype — the brain dump step where users pour out overwhelm and see their
+emotionally charged words distilled from dissolving narrative.
 
 ## What This Prototype Is
 
@@ -248,5 +250,12 @@ These live in the project's docs folder and are the source of truth:
 
 This prototype serves people who are overwhelmed, on their phone, at low capacity.
 Every decision should be tested against: "Would this help someone who can barely focus?"
+
+The target user is capable, emotionally literate, and arrives mid-spiral — not at the
+beginning. They've already tried things. They don't need a curriculum. They need a
+companion that trusts them enough to not over-help. The core pattern the app addresses:
+they forget to include themselves in their own story. The brain dump captures everything
+outward. The word portrait reflects back the tone. The investigation asks: where are you
+in this?
 
 The interaction IS the therapy. The contract is sacred. Move at the speed of trust.

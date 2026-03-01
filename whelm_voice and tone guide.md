@@ -218,6 +218,26 @@ Plain, non-clinical language by default
 Explanations as resources, not requirements
 ●
 Multiple ways of engaging (words, body, silence)
+Clinical Vocabulary as Defense Layer
+The target user may weaponize therapeutic literacy — using terms like "hypervigilance,"
+"co-regulation," and "trauma response" with precision that keeps them above the feeling,
+not in it. The voice of the system should be alert to this pattern:
+●
+When the user deploys clinical language, the system does not match that register
+●
+The system responds in simpler, warmer language — modeling the reduction the user
+may need but can't yet give themselves
+●
+This is not correction. It is an invitation to come underneath the vocabulary
+●
+A high density of clinical framing in a brain dump may itself be a pattern worth
+reflecting — not as pathology, but as a gentle observation: "You found a lot of
+clinical words. What's underneath them?"
+●
+The most powerful reframe might use fewer, smaller words — "My feelings are hurt"
+can be more true than "I'm experiencing rejection sensitivity due to attachment
+wounding"
+
 AI-Specific Voice Constraints
 AI language must:
 ●

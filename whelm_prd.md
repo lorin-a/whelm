@@ -2,9 +2,8 @@
 ## Product Name
 Whelm
 ## One-Sentence Description
-Whelm is a body-based, trauma-informed mental health tool that helps emotionally fluent but
-overwhelmed people untangle their inner experience, discover values, and regain agency—at
-their own pace.
+Whelm doesn't help you manage your overwhelm. It helps you find yourself inside it.
+
 ## Problem Statement
 Users are smart enough to know they are stuck, but not resourced enough to get unstuck.
 They:
@@ -14,6 +13,13 @@ They:
 - May be in therapy but need support between sessions
 - Feel they *should* be able to figure this out alone
 Overwhelm is treated as a failure to fix—rather than material to work with.
+
+The app doesn't untangle the situation. It untangles you from the situation. The
+distinction matters. One is logistical support. The other is: "You've been so busy
+managing everything around you that you forgot to check if you're okay." The app strips
+away everything but your truth and your story, and mirrors it back so you don't lose
+yourself in the spiral. That's the whole job.
+
 ## Core Philosophy
 - Overwhelm is not a problem to solve, but information to be worked with
 - The body holds truth before cognition
@@ -22,12 +28,75 @@ Overwhelm is treated as a failure to fix—rather than material to work with.
 - The tool should eventually be needed less (that is success)
 - The tool should meet users where they already are (often on their phone)
 - DO NO HARM, when in doubt, slow down, soften, and offer choice
+
+### The Missing Self
+The core pattern Whelm addresses: users forget to include themselves in their own story.
+All the external stuff — other people's feelings, relational management, scanning for what
+they did wrong — crowds out their own experience.
+
+The most therapeutic thing the app can do is help someone notice that they are missing from
+the narrative they're telling. Not through teaching. Through the structure of the
+experience. The brain dump captures everything outward. The word portrait reflects back the
+tone. And somewhere in the investigation, the question becomes: where are you in this?
+
+### The Gap Between Naming and Feeling
+Sometimes the destination of the word work isn't a reframe — it's a radical reduction. The
+reframed version of a complex spiral might not be more nuanced language. It might be
+devastatingly simple: "My feelings are hurt."
+
+The reframe step should allow for simplification, not just substitution. The most powerful
+reframe might use fewer, smaller words.
+
+### Cognitive Sophistication as Defense
+The target user weaponizes therapeutic literacy. They use terms like "hypervigilance,"
+"co-regulation," and "trauma response" with precision — but that precision keeps them above
+the feeling, not in it.
+
+When the brain dump contains a high density of clinical vocabulary, that itself may be a
+pattern worth surfacing. Not as pathology, but as an invitation.
+
 ## Target User
-Emotionally intelligent, introspective people who:
-- Overthink and intellectualize
-- People-please and lose themselves
-- Are highly sensitive and perceptive
-- Want clarity, not platitudes
+
+### Who They Are
+A capable, emotionally intelligent person — likely late teens through adulthood — who has
+done the reading. They can name attachment styles, identify trauma responses, and articulate
+what's happening in their nervous system. They are perceptive, analytical, and deeply
+attuned to other people's emotional states.
+
+This attunement is both a genuine skill and a survival adaptation. Their nervous system
+detects relational shifts faster than their rational mind can interpret them. The gap between
+sensing something and understanding it creates a vacuum that anxiety fills.
+
+The target user is a capable teenager or adult who can handle the details of their overwhelm.
+The app's job is not to solve everything for them — that's actually what doesn't help.
+Instead, it frees up capacity by helping them come back to themselves, so they can tackle the
+other things from a grounded place.
+
+### What They Do Under Stress
+When overwhelmed, they go outward first. They scan for what they did wrong, manage other
+people's feelings, strategize repair, and deploy every self-help tool in their repertoire.
+They reframe, self-talk, journal, and try to think their way through.
+
+All of this is real skill. And none of it resolves the feeling — because the feeling isn't a
+cognitive problem. It's often something much simpler hiding underneath: hurt, sadness,
+rejection, disappointment. Something their system learned to skip past a long time ago.
+
+Their emotional processing converts personal hurt into a task. Instead of feeling the pain,
+they immediately begin managing the relationship, scanning for their own culpability, and
+strategizing repair. The hurt gets buried under labor.
+
+They need to find themselves inside their own spiral. They need someone — or something — to
+catch the moment where their own experience dropped out of the picture and say: "Wait. What
+about you?"
+
+### When They Arrive at Whelm
+They arrive mid-spiral, not at the beginning. They've already tried things. They may feel
+like they're failing at self-regulation. They are tired, probably on their phone, possibly
+at 2am.
+
+They don't need a curriculum. They need a companion that trusts them enough to not
+over-help — one that strips away everything but their truth and mirrors it back, so they can
+remember that they exist inside their own story.
 ## Transformation (Before → After)
 ### Before
 - Spinning, overwhelmed, fragmented
