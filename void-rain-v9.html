@@ -299,7 +299,7 @@
   /* ---- Witnessing text ---- */
   .witnessing-text {
     position: absolute;
-    top: 20%;
+    top: 8%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
@@ -362,6 +362,16 @@
     width: 92%;
     max-width: 480px;
     overflow: visible;
+    transition: top 0.8s cubic-bezier(0.25, 0, 0.15, 1),
+                bottom 0.8s cubic-bezier(0.25, 0, 0.15, 1);
+  }
+
+  .pill-pool.portrait {
+    bottom: auto;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    flex-direction: column;
+    gap: 10px;
   }
 
   .pill-row {
@@ -371,6 +381,11 @@
     gap: 8px;
     overflow: visible;
     position: relative;
+    transition: transform 0.6s cubic-bezier(0.25, 0, 0.15, 1);
+  }
+
+  .pill-pool.portrait .pill-row {
+    transform: none !important;
   }
 
   .pill {
@@ -396,6 +411,14 @@
     transition: transform 0.5s cubic-bezier(0.25, 0, 0.15, 1),
                 background 0.3s ease,
                 border-color 0.3s ease;
+  }
+
+  .pill-pool.portrait .pill {
+    transform: rotate(0deg) translateX(0px) translateY(0);
+  }
+
+  .pill-pool.portrait .pill.active {
+    transform: rotate(0deg) translateX(0px) translateY(-28px);
   }
 
   .pill.stacking-pill {
@@ -577,13 +600,17 @@
     transition: opacity 0.6s ease;
   }
 
-  /* ---- Portrait actions (keep writing / start fresh) ---- */
+  /* ---- Portrait actions (fixed at bottom) ---- */
   .portrait-actions {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    z-index: 15;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 20px;
-    margin-top: 20px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 1s ease;
@@ -886,10 +913,10 @@
       <p class="pill-hint-primary" id="pillHintPrimary">tap a word to reveal its context</p>
       <p class="pill-hint-secondary" id="pillHintSecondary">tap + hold to edit</p>
     </div>
-    <div class="portrait-actions" id="portraitActions">
-      <button class="keep-writing-btn" id="keepWritingBtn" type="button">keep writing</button>
-      <button class="start-fresh-btn" id="startFreshBtn" type="button">start fresh</button>
-    </div>
+  </div>
+  <div class="portrait-actions" id="portraitActions">
+    <button class="keep-writing-btn" id="keepWritingBtn" type="button">keep writing</button>
+    <button class="start-fresh-btn" id="startFreshBtn" type="button">start fresh</button>
   </div>
   <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
 </div>
@@ -2449,12 +2476,14 @@
   }
 
   function positionAddOwnBtn() {
-    // Place button just above the pill pool
-    const poolRect = pillPool.getBoundingClientRect();
-    const canvasRect = voidCanvas.getBoundingClientRect();
-    const poolTop = poolRect.top - canvasRect.top;
-    addOwnBtn.style.bottom = 'auto';
-    addOwnBtn.style.top = Math.max(poolTop - 52, canvasRect.height * 0.5) + 'px';
+    // Place button between witnessing text and pill grid
+    requestAnimationFrame(() => {
+      const poolRect = pillPool.getBoundingClientRect();
+      const canvasRect = voidCanvas.getBoundingClientRect();
+      const poolTop = poolRect.top - canvasRect.top;
+      addOwnBtn.style.bottom = 'auto';
+      addOwnBtn.style.top = Math.max(poolTop - 52, 80) + 'px';
+    });
   }
 
   function enterEditMode() {
@@ -2500,8 +2529,9 @@
       witnessingText.classList.add('visible');
     }, 800);
 
-    // Activate pills — remove passive, add click + long-press handlers
+    // Activate pills — remove passive, center the pool, straighten pills
     pillPool.classList.remove('passive');
+    pillPool.classList.add('portrait');
     const allPills = pillPool.querySelectorAll('.pill');
     allPills.forEach(pill => {
       pill.classList.add('tappable');
@@ -2580,8 +2610,9 @@
     framing.querySelector('.instruction').style.opacity = '';
     framing.querySelector('.contract').style.opacity = '';
 
-    // Make pills passive again
+    // Make pills passive again, restore wabi-sabi layout
     pillPool.classList.add('passive');
+    pillPool.classList.remove('portrait');
     const allPills = pillPool.querySelectorAll('.pill');
     allPills.forEach(pill => {
       pill.classList.remove('tappable');
@@ -2647,6 +2678,7 @@
     // Reset DOM — pill pool
     pillPool.innerHTML = '';
     pillPool.classList.add('passive');
+    pillPool.classList.remove('portrait');
 
     // Reset DOM — portrait UI
     witnessingText.classList.remove('visible');
