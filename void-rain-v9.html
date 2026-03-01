@@ -193,54 +193,88 @@
     pointer-events: none;
   }
 
-  /* ---- Sensory toggle ---- */
-  .sensory-toggle {
+  /* ---- Done invite ---- */
+  .done-invite {
     position: absolute;
-    top: 44px;
-    right: 16px;
-    z-index: 25;
-    width: 48px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
+    top: 55%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: 6px 0;
+    gap: 10px;
     opacity: 0;
-    animation: fadeIn 2.2s ease 0.3s forwards;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+
+  .done-invite.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .done-invite .done-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--linger);
+    background: var(--linger-bg);
+    border: 1px solid var(--linger-border);
+    padding: 10px 28px;
+    border-radius: 24px;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    color: var(--text-faint);
-    transition: color 0.3s ease;
+    min-height: 44px;
+    min-width: 44px;
+    letter-spacing: 0.02em;
   }
 
-  .sensory-toggle.active {
-    color: var(--text-soft);
-  }
-
-  .sensory-toggle svg {
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .sensory-toggle .toggle-label {
+  .done-invite .done-hint {
     font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    color: var(--text-ghost);
-    letter-spacing: 0.05em;
-    line-height: 1;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text-faint);
+    letter-spacing: 0.01em;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .sensory-toggle { display: none; }
+  /* ---- Passive pills during VOID act ---- */
+  .pill-pool.passive .pill {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* ---- Typing area dimmed after done ---- */
+  .typing-area.dimmed {
+    opacity: 0.2;
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+  }
+
+  /* ---- Witnessing text ---- */
+  .witnessing-text {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    text-align: center;
+    width: 85%;
+    max-width: 400px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--text-soft);
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    pointer-events: none;
+  }
+
+  .witnessing-text.visible {
+    opacity: 1;
   }
 
   /* ---- Falling pill ---- */
@@ -474,6 +508,7 @@
     .framing { padding-top: 32px; }
     .typing-area { top: 30%; width: 88%; }
     .pill-pool { bottom: 16px; }
+    .done-invite { top: 52%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -513,11 +548,6 @@
   <p class="contract">The story will fall away. The feelings will stay.</p>
 </div>
 
-<button class="sensory-toggle" id="sensoryToggle" aria-label="Enable sound and haptics" type="button">
-  <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>
-  <span class="toggle-label">sound</span>
-</button>
-
 <div class="void-canvas" id="voidCanvas">
   <canvas class="rain-canvas" id="rainCanvas"></canvas>
   <div class="typing-area" id="typingArea">
@@ -526,8 +556,15 @@
       <span class="cursor-blink" id="cursor"></span>
     </div>
   </div>
-  <div class="pill-pool" id="pillPool"></div>
+  <div class="pill-pool passive" id="pillPool"></div>
   <div class="pill-hint" id="pillHint">tap a word to see its story</div>
+  <div class="done-invite" id="doneInvite">
+    <button class="done-btn" id="doneBtn" type="button">i'm done</button>
+    <span class="done-hint">your words are held below</span>
+  </div>
+  <div class="witnessing-text" id="witnessingText">
+    <p>This is how you're speaking to yourself right now.</p>
+  </div>
 </div>
 
 <textarea class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"></textarea>
@@ -1090,6 +1127,10 @@
   let hasStarted = false;
   const TRAIL_DISTANCE = 2;
 
+  // Act state: 'VOID' (typing, pills passive) → 'PORTRAIT' (pills interactive)
+  let currentAct = 'VOID';
+  let firstPillSettled = false;
+
   // Transcript store — per-pill context snapshots
   const pillContextStore = [];
 
@@ -1209,6 +1250,7 @@
   const voidCanvas = document.getElementById('voidCanvas');
   const pillPool = document.getElementById('pillPool');
   const framing = document.getElementById('framing');
+  const typingArea = document.getElementById('typingArea');
 
   // Active pill context state
   let activePill = null;
@@ -1237,6 +1279,7 @@
   hiddenInput.addEventListener('input', onInput);
 
   function onInput() {
+    if (currentAct !== 'VOID') return; // ignore input after done
     try {
       fullText = hiddenInput.value;
       words = parseWords(fullText);
@@ -1248,6 +1291,16 @@
 
       // Dismiss any open pill context when typing resumes
       if (activePill) dismissContext();
+
+      // Hide done invite on keystroke, reset timer
+      if (doneInviteTimer) clearTimeout(doneInviteTimer);
+      hideDoneInvite();
+      if (firstPillSettled) {
+        doneInviteTimer = setTimeout(() => {
+          try { showDoneInvite(); }
+          catch (err) { showError('doneInviteTimer', err); }
+        }, 3000);
+      }
 
       // Schedule render on next animation frame (debounce)
       scheduleRender();
@@ -1308,7 +1361,7 @@
   });
 
   hiddenInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); forceReleaseAll(); }
+    if (e.key === 'Enter' && currentAct === 'VOID') { e.preventDefault(); forceReleaseAll(); }
   });
 
 
@@ -1383,7 +1436,6 @@
             pill.dataset.word = w.pillLabel;
             pill.dataset.startIdx = w.startIdx;
             frag.appendChild(pill);
-            hapticCrystallize();
           }
           // Skip remaining chars in this charged word
           i += isVisibleStart ? (w.endIdx - gIdx) : 1;
@@ -1465,7 +1517,6 @@
       releasedUpTo = targetCharPos;
 
       spawnRain(charData);
-      playReleaseTone();
 
       pillsToFall.forEach((p, i) => {
         setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
@@ -1541,7 +1592,6 @@
       }
 
       spawnRain(charData);
-      playReleaseTone();
 
       allPillsInline.forEach((p, i) => {
         setTimeout(() => dropPill(p.word, p.x, p.y, p.isStacking), i * 150);
@@ -1681,102 +1731,6 @@
 
 
   // ===========================================================================
-  //  WEB AUDIO — Oscillator-based tones
-  // ===========================================================================
-
-  let audioCtx = null;
-  let sensoryEnabled = false;
-
-  function initAudio() {
-    if (audioCtx) return;
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-      console.warn('Web Audio not available:', e);
-    }
-  }
-
-  function playReleaseTone() {
-    if (!sensoryEnabled || !audioCtx) return;
-    try {
-      const t = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(220, t);
-      osc.frequency.exponentialRampToValueAtTime(180, t + 0.3);
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.03, t + 0.02);
-      gain.gain.linearRampToValueAtTime(0, t + 0.3);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(t);
-      osc.stop(t + 0.35);
-    } catch (e) {}
-  }
-
-  function playSettleTone(isStacking) {
-    if (!sensoryEnabled || !audioCtx) return;
-    try {
-      const t = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      const freq = isStacking ? 300 : (400 + Math.random() * 200);
-      osc.frequency.setValueAtTime(freq, t);
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.025, t + 0.01);
-      gain.gain.linearRampToValueAtTime(0, t + 0.15);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(t);
-      osc.stop(t + 0.2);
-    } catch (e) {}
-  }
-
-
-  // ===========================================================================
-  //  HAPTICS
-  // ===========================================================================
-
-  let lastCrystallizeTime = 0;
-  function hapticCrystallize() {
-    if (!sensoryEnabled) return;
-    const now = performance.now();
-    if (now - lastCrystallizeTime < 300) return;
-    lastCrystallizeTime = now;
-    try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
-  }
-
-  function hapticSettle() {
-    if (!sensoryEnabled) return;
-    try { navigator.vibrate && navigator.vibrate([8, 30, 8]); } catch (e) {}
-  }
-
-
-  // ===========================================================================
-  //  SENSORY TOGGLE
-  // ===========================================================================
-
-  const sensoryToggle = document.getElementById('sensoryToggle');
-  const svgOff = '<path d="M11 5L6 9H2v6h4l5 4V5z"/>';
-  const svgOn = '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
-
-  sensoryToggle.addEventListener('click', () => {
-    sensoryEnabled = !sensoryEnabled;
-    sensoryToggle.classList.toggle('active', sensoryEnabled);
-    sensoryToggle.querySelector('svg').innerHTML = sensoryEnabled ? svgOn : svgOff;
-    sensoryToggle.setAttribute('aria-label', sensoryEnabled ? 'Disable sound and haptics' : 'Enable sound and haptics');
-
-    if (sensoryEnabled) {
-      initAudio();
-      playSettleTone(false);
-      try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
-    }
-    // Refocus hidden input so typing isn't interrupted
-    hiddenInput.focus();
-  });
-
-
-  // ===========================================================================
   //  PILL PILE
   // ===========================================================================
 
@@ -1804,17 +1758,20 @@
     const nudge = -5 + Math.random() * 10;
 
     const poolPill = document.createElement('span');
-    poolPill.className = 'pill tappable' + (isStacking ? ' stacking-pill' : '');
+    poolPill.className = 'pill' + (isStacking ? ' stacking-pill' : '');
+    if (currentAct === 'PORTRAIT') {
+      poolPill.classList.add('tappable');
+      poolPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handlePillTap(e);
+      });
+    }
     poolPill.textContent = clean;
     poolPill.style.opacity = '0';
     poolPill.style.setProperty('--pill-rotate', rotate + 'deg');
     poolPill.style.setProperty('--pill-nudge', nudge + 'px');
     poolPill.dataset.pillLabel = word;
     poolPill.dataset.isStacking = isStacking ? '1' : '0';
-    poolPill.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handlePillTap(e);
-    });
     pileRows[pileRows.length - 1].appendChild(poolPill);
     currentRowCount++;
 
@@ -1845,7 +1802,7 @@
       const xE = t * t * (3 - 2 * t);
       flyPill.style.transform = `translate(calc(-50% + ${xE * driftX}px), calc(-50% + ${yE * driftY}px)) rotate(${rotate * t}deg)`;
       if (t < 1) { requestAnimationFrame(fall); }
-      else { poolPill.style.opacity = '1'; flyPill.remove(); playSettleTone(isStacking); hapticSettle(); }
+      else { poolPill.style.opacity = '1'; flyPill.remove(); }
     }
     requestAnimationFrame(fall);
   }
@@ -2012,28 +1969,103 @@
 
 
   // ===========================================================================
-  //  FIRST-PILL HINT — "tap a word to see its story"
+  //  FIRST-PILL + DONE INVITE — pause-triggered centered invite
   // ===========================================================================
 
   const pillHint = document.getElementById('pillHint');
+  const doneInvite = document.getElementById('doneInvite');
+  const doneBtn = document.getElementById('doneBtn');
   let hintShown = false;
+  let doneInviteTimer = null;
 
-  // Patch dropPill to show hint on first pill settle
+  function showDoneInvite() {
+    if (currentAct !== 'VOID' || !firstPillSettled) return;
+    doneInvite.classList.add('visible');
+  }
+
+  function hideDoneInvite() {
+    doneInvite.classList.remove('visible');
+  }
+
+  // Patch dropPill to set firstPillSettled on first pill settle
   const _origDropPill = dropPill;
   dropPill = function(word, fromX, fromY, isStacking) {
     _origDropPill(word, fromX, fromY, isStacking);
-    if (!hintShown) {
+    if (!hintShown && currentAct === 'VOID') {
       hintShown = true;
-      // Show after pill settles (~1.5s fall duration)
+      // Mark eligible after pill settles (~1.6s fall duration)
       setTimeout(() => {
-        pillHint.classList.add('visible');
-        // Auto-fade after 4s
-        setTimeout(() => {
-          pillHint.classList.remove('visible');
-        }, 4000);
+        if (currentAct === 'VOID') {
+          firstPillSettled = true;
+        }
       }, 1600);
     }
   };
+
+
+  // ===========================================================================
+  //  DONE HANDLER — Transition from VOID to PORTRAIT
+  // ===========================================================================
+
+  const witnessingText = document.getElementById('witnessingText');
+
+  function handleDonePressed() {
+    if (currentAct !== 'VOID') return;
+
+    // Force-release any remaining text
+    if (fullText.trim().length > 0) {
+      forceReleaseAll();
+    }
+
+    transitionToPortrait();
+  }
+
+  function transitionToPortrait() {
+    currentAct = 'PORTRAIT';
+
+    // Hide done invite
+    if (doneInviteTimer) clearTimeout(doneInviteTimer);
+    hideDoneInvite();
+
+    // Dim typing area
+    typingArea.classList.add('dimmed');
+    hiddenInput.blur();
+
+    // Clear timers
+    if (punctTimer) clearTimeout(punctTimer);
+    if (pauseTimer) clearTimeout(pauseTimer);
+
+    // Update framing text
+    framing.classList.remove('dimmed');
+    framing.querySelector('.instruction').style.opacity = '0';
+    framing.querySelector('.contract').style.opacity = '0';
+
+    // Show witnessing text
+    setTimeout(() => {
+      witnessingText.classList.add('visible');
+    }, 800);
+
+    // Activate pills — remove passive, add click handlers
+    pillPool.classList.remove('passive');
+    const allPills = pillPool.querySelectorAll('.pill');
+    allPills.forEach(pill => {
+      pill.classList.add('tappable');
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handlePillTap(e);
+      });
+    });
+
+    // Show pill hint
+    setTimeout(() => {
+      pillHint.classList.add('visible');
+    }, 1500);
+  }
+
+  doneBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleDonePressed();
+  });
 
 
   // ===========================================================================
