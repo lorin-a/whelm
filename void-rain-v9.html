@@ -13,7 +13,7 @@
     --bg: #f5f0eb;
     --text: #3d3833;
     --text-soft: #6b6158;
-    --text-faint: #968d84;
+    --text-faint: #7d756c;
     --text-ghost: #d4ccc4;
     --linger: #5c4f6b;
     --linger-border: rgba(92, 79, 107, 0.3);
@@ -44,26 +44,26 @@
   }
 
   .framing p {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 300;
-    line-height: 1.9;
+    line-height: 1.6;
     color: var(--text-soft);
   }
 
   .framing .instruction {
-    font-size: 17px;
-    font-weight: 400;
+    font-size: 20px;
+    font-weight: 500;
     color: var(--text);
     margin-bottom: 8px;
-    line-height: 1.5;
+    line-height: 1.4;
     transition: opacity 2s ease;
   }
 
   .framing .contract {
     margin-top: 6px;
     font-style: italic;
-    color: var(--text-faint);
-    font-size: 14px;
+    color: var(--text-soft);
+    font-size: 15px;
     transition: opacity 2s ease;
   }
 
@@ -139,7 +139,7 @@
   /* Charged words in trail: style as pill inline */
   .typing-display .inline-pill {
     display: inline-block;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     color: var(--linger);
     background: var(--linger-bg);
@@ -159,7 +159,7 @@
     border-color: rgba(61, 56, 51, 0.15);
     font-weight: 500;
     padding: 2px 8px;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .cursor-blink {
@@ -180,9 +180,10 @@
   .placeholder {
     color: var(--text-faint);
     font-weight: 300;
-    font-size: 17px;
+    font-size: 20px;
     pointer-events: none;
     transition: opacity 0.4s ease;
+    letter-spacing: 0.02em;
   }
 
   /* ---- Rain canvas ---- */
@@ -216,7 +217,7 @@
 
   .done-invite .done-btn {
     font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
     color: var(--linger);
     background: var(--linger-bg);
@@ -233,7 +234,7 @@
 
   .done-invite .done-hint {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 300;
     font-style: italic;
     color: var(--text-faint);
@@ -281,7 +282,7 @@
   .falling-pill {
     position: absolute;
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
     color: var(--linger);
     background: var(--linger-bg);
@@ -322,7 +323,7 @@
 
   .pill {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
     color: var(--linger);
     background: var(--linger-bg);
@@ -351,7 +352,7 @@
     border-color: rgba(61, 56, 51, 0.15);
     font-weight: 500;
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: 15px;
     min-width: 28px;
     text-align: center;
   }
@@ -429,7 +430,7 @@
 
   .pill-context .context-text {
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 300;
     line-height: 1.7;
     color: var(--text-soft);
@@ -444,7 +445,7 @@
 
   .pill-context .tangle-side {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 300;
     line-height: 1.6;
     color: var(--text-soft);
@@ -452,8 +453,8 @@
   }
 
   .pill-context .tangle-divider {
-    font-size: 12px;
-    color: var(--text-ghost);
+    font-size: 14px;
+    color: var(--text-faint);
     font-weight: 400;
     letter-spacing: 0.15em;
     padding: 2px 0;
@@ -463,7 +464,7 @@
     margin-top: 8px;
     padding-top: 6px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     font-style: italic;
     color: var(--text-faint);
     text-align: center;
@@ -544,14 +545,14 @@
 
 <div class="framing" id="framing">
   <p class="instruction">Let your thoughts move through you.</p>
-  <p class="contract">Type your stream of consciousness and allow yourself to be unfiltered. Your entry will be saved.</p>
+  <p class="contract">Type your stream of consciousness and allow yourself<br>to be unfiltered. Your entry will be saved.</p>
 </div>
 
 <div class="void-canvas" id="voidCanvas">
   <canvas class="rain-canvas" id="rainCanvas"></canvas>
   <div class="typing-area" id="typingArea">
     <div class="typing-display" id="typingDisplay">
-      <span class="placeholder" id="placeholder">start typing...</span>
+      <span class="placeholder" id="placeholder">tap here and start typing</span>
       <span class="cursor-blink" id="cursor"></span>
     </div>
   </div>
@@ -1356,7 +1357,7 @@
     });
   }
 
-  hiddenInput.addEventListener('focus', () => { placeholder.style.opacity = '0'; });
+  hiddenInput.addEventListener('focus', () => { if (hasStarted) placeholder.style.opacity = '0'; });
   hiddenInput.addEventListener('blur', () => {
     if (!hasStarted) placeholder.style.opacity = '1';
   });
