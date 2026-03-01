@@ -198,13 +198,13 @@
   .done-invite {
     position: absolute;
     top: 55%;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
     z-index: 11;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.8s ease;
@@ -215,6 +215,12 @@
     pointer-events: auto;
   }
 
+  .done-invite .done-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
   .done-invite .done-btn {
     font-family: 'DM Sans', sans-serif;
     font-size: 16px;
@@ -222,6 +228,23 @@
     color: var(--linger);
     background: var(--linger-bg);
     border: 1px solid var(--linger-border);
+    padding: 10px 28px;
+    border-radius: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
+    letter-spacing: 0.02em;
+  }
+
+  .done-invite .keep-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-soft);
+    background: transparent;
+    border: 1px solid var(--text-ghost);
     padding: 10px 28px;
     border-radius: 24px;
     cursor: pointer;
@@ -397,19 +420,19 @@
 
   .pill-context.visible {
     opacity: 1;
-    max-height: 80px;
+    max-height: 120px;
     pointer-events: auto;
     cursor: pointer;
   }
 
   .pill-context.depth-1 {
     max-width: min(360px, 85vw);
-    max-height: 160px;
+    max-height: 220px;
   }
 
   .pill-context.depth-2 {
-    max-width: min(400px, 90vw);
-    max-height: 320px;
+    max-width: min(420px, 92vw);
+    max-height: 50vh;
     overflow-y: auto;
   }
 
@@ -460,15 +483,24 @@
     padding: 2px 0;
   }
 
-  .pill-context .depth-prompt {
-    margin-top: 8px;
-    padding-top: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-style: italic;
-    color: var(--text-faint);
-    text-align: center;
-    letter-spacing: 0.02em;
+  .pill-context .depth-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 4px;
+  }
+
+  .pill-context .depth-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-ghost);
+    transition: background 0.3s ease;
+  }
+
+  .pill-context .depth-dot.active {
+    background: var(--linger);
   }
 
   @keyframes pillArrive {
@@ -484,20 +516,16 @@
     font-size: 16px;
   }
 
-  /* ---- Pill hint ---- */
+  /* ---- Pill hint (below witnessing text) ---- */
   .pill-hint {
-    position: relative;
-    order: 1;
-    z-index: 12;
     font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
+    font-size: 15px;
     font-style: italic;
     color: var(--text-faint);
     opacity: 0;
     transition: opacity 1s ease;
     pointer-events: none;
-    white-space: nowrap;
-    margin-bottom: 8px;
+    margin-top: 12px;
   }
 
   .pill-hint.visible {
@@ -556,16 +584,18 @@
       <span class="cursor-blink" id="cursor"></span>
     </div>
   </div>
-  <div class="pill-pool passive" id="pillPool">
-    <div class="pill-hint" id="pillHint">tap a word to reveal its context</div>
-  </div>
+  <div class="pill-pool passive" id="pillPool"></div>
   <div class="done-invite" id="doneInvite">
-    <button class="done-btn" id="doneBtn" type="button">i'm done</button>
+    <div class="done-buttons">
+      <button class="done-btn" id="doneBtn" type="button">i'm done</button>
+      <button class="keep-btn" id="keepBtn" type="button">keep typing</button>
+    </div>
     <span class="done-hint">your words are held below</span>
   </div>
   <div class="witnessing-text" id="witnessingText">
     <p>Instead of focusing on what you wrote, take a moment to look at <em>how</em> you wrote it. These words were filtered for descriptive language that might reveal patterns or subconscious beliefs.</p>
     <p style="margin-top: 12px;">Pause here — what do you observe?</p>
+    <p class="pill-hint" id="pillHint">tap a word to reveal its context</p>
   </div>
 </div>
 
@@ -1541,6 +1571,12 @@
     isReleasing = true;
     try {
 
+      // Ensure words are parsed from current text (may not have rendered yet)
+      words = parseWords(fullText);
+
+      // Force a synchronous render so DOM reflects current text before measuring
+      renderTypingLine();
+
       // Store context for unreleased charged words
       const sourceText = fullText;
       for (let i = 0; i < words.length; i++) {
@@ -1877,15 +1913,20 @@
     const level = levels[Math.min(depth, levels.length - 1)];
     const highlighted = buildHighlightedText(level);
 
-    let promptHtml = '';
-    if (levels.length > 1 && depth < levels.length - 1) {
-      promptHtml = '<div class="depth-prompt">tap for more context</div>';
+    // Dot indicator: one dot per level, current and previous are active
+    let dotsHtml = '';
+    if (levels.length > 1) {
+      const dots = [];
+      for (let d = 0; d < levels.length; d++) {
+        dots.push('<span class="depth-dot' + (d <= depth ? ' active' : '') + '"></span>');
+      }
+      dotsHtml = '<div class="depth-dots">' + dots.join('') + '</div>';
     }
 
     contextEl.innerHTML = `
       <div class="pill-context-inner">
         <div class="context-text">${highlighted}</div>
-        ${promptHtml}
+        ${dotsHtml}
       </div>
     `;
 
@@ -1995,10 +2036,17 @@
     _origDropPill(word, fromX, fromY, isStacking);
     if (!hintShown && currentAct === 'VOID') {
       hintShown = true;
-      // Mark eligible after pill settles (~1.6s fall duration)
+      // Mark eligible after pill settles (~1.6s fall duration), then start invite timer
       setTimeout(() => {
         if (currentAct === 'VOID') {
           firstPillSettled = true;
+          // Start invite timer if user is idle (no pending timer from onInput)
+          if (!doneInviteTimer) {
+            doneInviteTimer = setTimeout(() => {
+              try { showDoneInvite(); }
+              catch (err) { showError('doneInviteTimer', err); }
+            }, 3000);
+          }
         }
       }, 1600);
     }
@@ -2029,8 +2077,9 @@
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
     hideDoneInvite();
 
-    // Dim typing area
+    // Dim typing area and hide cursor
     typingArea.classList.add('dimmed');
+    cursorEl.style.display = 'none';
     hiddenInput.blur();
 
     // Clear timers
@@ -2064,9 +2113,17 @@
     }, 1500);
   }
 
+  const keepBtn = document.getElementById('keepBtn');
+
   doneBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     handleDonePressed();
+  });
+
+  keepBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideDoneInvite();
+    hiddenInput.focus();
   });
 
 
