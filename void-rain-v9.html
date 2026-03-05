@@ -366,6 +366,19 @@
                 bottom 0.8s cubic-bezier(0.25, 0, 0.15, 1);
   }
 
+  .pill-pool.ghost-view {
+    bottom: 40px;
+    top: 52%;
+    transform: translateX(-50%);
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pill-pool.ghost-view .pill-row {
+    transform: none !important;
+  }
+
   .pill-pool.portrait {
     bottom: 80px;
     top: 42%;
@@ -911,6 +924,189 @@
     .stream-scroll { padding: 0 20px 120px; }
   }
 
+  /* ---- Ghost text recovery layer ---- */
+  .ghost-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 50%;
+    z-index: 14;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 100px 24px 24px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ghost-layer.visible {
+    pointer-events: auto;
+  }
+
+  .ghost-text {
+    max-width: 460px;
+    margin: 0 auto;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 2.4;
+    color: #7a7270; /* ~4.1:1 contrast on --bg — passes WCAG AA at this size */
+    letter-spacing: 0.01em;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ghost-word {
+    display: inline;
+    padding: 3px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.3s ease, background 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ghost-word:hover,
+  .ghost-word:focus-visible {
+    color: var(--text);
+    background: rgba(92, 79, 107, 0.08);
+  }
+
+  .ghost-word:focus-visible {
+    outline: 2px solid var(--linger-border);
+    outline-offset: 2px;
+  }
+
+  .ghost-word.already-caught {
+    color: var(--linger);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .ghost-word.claimed {
+    color: var(--linger);
+    background: var(--linger-bg);
+    border-radius: 16px;
+    padding: 2px 10px;
+    pointer-events: none;
+  }
+
+  .ghost-invite {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text-faint);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .ghost-counter {
+    position: absolute;
+    top: 49%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-faint);
+    opacity: 0;
+    pointer-events: none;
+    letter-spacing: 0.02em;
+    transition: color 0.3s ease;
+  }
+
+  .ghost-counter.at-limit {
+    color: var(--linger);
+    font-weight: 400;
+  }
+
+  .ghost-dismiss {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text-soft);
+    background: rgba(92, 79, 107, 0.06);
+    border: 1px solid rgba(92, 79, 107, 0.15);
+    border-radius: 24px;
+    padding: 10px 24px;
+    min-height: 44px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ghost-dismiss:hover {
+    background: rgba(92, 79, 107, 0.1);
+  }
+
+  .ghost-dismiss:focus-visible {
+    outline: 2px solid var(--linger-border);
+    outline-offset: 2px;
+  }
+
+  .ghost-back {
+    position: absolute;
+    top: 44px;
+    left: 16px;
+    z-index: 16;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-soft);
+    font-size: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ghost-back:focus-visible {
+    outline: 2px solid var(--linger-border);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .ghost-layer { padding: 80px 20px 20px; }
+    .ghost-invite { top: 50px; font-size: 14px; }
+    .ghost-dismiss { top: 46%; }
+    .ghost-back { top: 32px; left: 8px; }
+  }
+
+  /* Screen reader only — visually hidden but accessible */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   /* Debug error indicator */
   .error-flag {
     position: fixed;
@@ -973,6 +1169,14 @@
   <button class="forward-btn" id="forwardBtn" type="button" aria-label="Return to portrait">&#8594;</button>
   <button class="clear-all-btn" id="clearAllBtn" type="button">clear all</button>
   <button class="add-own-btn" id="addOwnBtn" type="button">+ add your own</button>
+  <!-- Ghost text recovery layer — dissolved text for claiming missed words -->
+  <div class="ghost-layer" id="ghostLayer" role="region" aria-label="Your dissolved text — tap any word to add it to your portrait">
+    <div class="ghost-text" id="ghostText"></div>
+  </div>
+  <p class="ghost-invite" id="ghostInvite">if something's missing, it's still here</p>
+  <span class="ghost-counter" id="ghostCounter" aria-live="polite"></span>
+  <button class="ghost-dismiss" id="ghostDismiss" type="button">that's everything</button>
+  <button class="ghost-back" id="ghostBack" type="button" aria-label="Back to writing">&#8592;</button>
 </div>
 
 <div class="stream-overlay" id="streamOverlay">
@@ -2515,7 +2719,12 @@
       forceReleaseAll();
     }
 
-    transitionToPortrait();
+    // If there's transcript text and pills exist, show ghost layer first
+    if (transcript.trim().length > 0 && collectedPool.size > 0) {
+      transitionToGhost();
+    } else {
+      transitionToPortrait();
+    }
   }
 
   // ===========================================================================
@@ -2588,8 +2797,21 @@
     pillHintSecondary.style.opacity = '';
   }
 
-  function transitionToPortrait() {
-    currentAct = 'PORTRAIT';
+
+  // ===========================================================================
+  //  GHOST TEXT RECOVERY — ambient dissolved text for claiming missed words
+  // ===========================================================================
+
+  const ghostLayer = document.getElementById('ghostLayer');
+  const ghostText = document.getElementById('ghostText');
+  const ghostInvite = document.getElementById('ghostInvite');
+  const ghostDismiss = document.getElementById('ghostDismiss');
+  const ghostBack = document.getElementById('ghostBack');
+  let ghostAutoDismissTimer = null;
+  let ghostWordSpans = [];
+
+  function transitionToGhost() {
+    currentAct = 'GHOST';
 
     // Hide done invite
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
@@ -2603,6 +2825,272 @@
     // Clear timers
     if (punctTimer) clearTimeout(punctTimer);
     if (pauseTimer) clearTimeout(pauseTimer);
+
+    // Hide void-only buttons
+    clearAllBtn.classList.remove('visible');
+    forwardBtn.classList.remove('visible');
+
+    // Position pills in bottom half for ghost view, make dismissable
+    pillPool.classList.remove('passive');
+    pillPool.classList.add('ghost-view');
+    pillPool.classList.add('editable');
+    const allPills = pillPool.querySelectorAll('.pill');
+    allPills.forEach(pill => {
+      pill.classList.add('tappable');
+    });
+
+    // Render the ghost text and initialize counter
+    renderGhostText();
+    updateGhostCounter();
+
+    // GSAP sequenced entrance
+    const m = getMotion(MOTION.transition);
+    const tl = gsap.timeline();
+
+    tl.to(framing, { opacity: 0, duration: m.duration, ease: m.ease })
+      .call(() => ghostLayer.classList.add('visible'))
+      .to(ghostLayer, { opacity: 1, duration: 1.5, ease: 'power1.inOut' }, '<')
+      .to(ghostInvite, { opacity: 1, duration: 1.2, ease: 'power1.inOut' }, '-=0.8')
+      .to(document.getElementById('ghostCounter'), { opacity: 1, duration: 0.6, ease: 'power1.inOut' }, '-=0.6')
+      .to(ghostDismiss, {
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power1.inOut',
+        onComplete: () => { ghostDismiss.style.pointerEvents = 'auto'; }
+      }, '-=0.4')
+      .to(ghostBack, {
+        opacity: 1,
+        duration: 0.6,
+        ease: 'power1.inOut',
+        onComplete: () => { ghostBack.style.pointerEvents = 'auto'; }
+      }, '-=0.6');
+
+  }
+
+  function renderGhostText() {
+    ghostText.innerHTML = '';
+    ghostWordSpans = [];
+
+    if (!transcript || transcript.trim().length === 0) return;
+
+    // Parse transcript to know which words were already caught
+    const parsedWords = parseWords(transcript);
+    const chargedRanges = [];
+    for (const w of parsedWords) {
+      if (w.isCharged) {
+        chargedRanges.push({ start: w.startIdx, end: w.endIdx });
+      }
+    }
+
+    function isAlreadyCaught(charIdx) {
+      for (const r of chargedRanges) {
+        if (charIdx >= r.start && charIdx < r.end) return true;
+      }
+      return false;
+    }
+
+    // Tokenize into words and whitespace
+    const tokenRegex = /(\S+|\s+)/g;
+    let match;
+    let spanIdx = 0;
+
+    while ((match = tokenRegex.exec(transcript)) !== null) {
+      const token = match[1];
+      const tokenStart = match.index;
+
+      if (/^\s+$/.test(token)) {
+        ghostText.appendChild(document.createTextNode(token));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'ghost-word';
+        span.textContent = token;
+        span.dataset.idx = spanIdx;
+        span.setAttribute('role', 'button');
+        span.setAttribute('tabindex', '0');
+        span.setAttribute('aria-label', 'Add "' + token + '" to portrait');
+
+        if (isAlreadyCaught(tokenStart)) {
+          span.classList.add('already-caught');
+          span.removeAttribute('role');
+          span.removeAttribute('tabindex');
+          span.setAttribute('aria-hidden', 'true');
+        }
+
+        ghostText.appendChild(span);
+        ghostWordSpans.push(span);
+        spanIdx++;
+      }
+    }
+
+    // Attach event listeners
+    ghostWordSpans.forEach(span => {
+      if (span.classList.contains('already-caught')) return;
+
+      span.addEventListener('click', (e) => {
+        e.stopPropagation();
+        claimGhostWord(span);
+      });
+
+      span.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          claimGhostWord(span);
+        }
+      });
+    });
+  }
+
+  const PORTRAIT_MAX_PILLS = 10;
+
+  function getActivePillCount() {
+    return pillPool.querySelectorAll('.pill').length;
+  }
+
+  function updateGhostCounter() {
+    const count = getActivePillCount();
+    const counter = document.getElementById('ghostCounter');
+    if (counter) {
+      counter.textContent = count + ' / ' + PORTRAIT_MAX_PILLS;
+      if (count >= PORTRAIT_MAX_PILLS) {
+        counter.classList.add('at-limit');
+      } else {
+        counter.classList.remove('at-limit');
+      }
+    }
+  }
+
+  function claimGhostWord(span) {
+    if (span.classList.contains('claimed') || span.classList.contains('already-caught')) return;
+
+    // Limit total pills in portrait
+    if (getActivePillCount() >= PORTRAIT_MAX_PILLS) return;
+
+    const word = span.textContent.toLowerCase().trim();
+    span.classList.add('claimed');
+    span.removeAttribute('tabindex');
+    span.setAttribute('aria-label', word + ' added to portrait');
+
+    // Animate the claim — word brightens, then a pill drops
+    const m = getMotion(MOTION.pillLand);
+    gsap.fromTo(span,
+      { scale: 1 },
+      { scale: 1.05, duration: 0.2, ease: 'power1.out',
+        onComplete: () => gsap.to(span, { scale: 1, duration: 0.3, ease: 'power1.inOut' })
+      }
+    );
+
+    // Get position relative to canvas for pill drop
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const spanRect = span.getBoundingClientRect();
+    const fromX = spanRect.left - canvasRect.left + spanRect.width / 2;
+    const fromY = spanRect.top - canvasRect.top + spanRect.height / 2;
+
+    // Drop as new pill
+    dropPill(word, fromX, fromY, false);
+
+    // Update counter after pill settles
+    setTimeout(() => updateGhostCounter(), 100);
+
+    // Announce for screen readers
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = word + ' added to your portrait — ' + (getActivePillCount()) + ' of ' + PORTRAIT_MAX_PILLS;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 2000);
+  }
+
+  function dismissGhostLayer() {
+    if (ghostAutoDismissTimer) {
+      clearTimeout(ghostAutoDismissTimer);
+      ghostAutoDismissTimer = null;
+    }
+
+    const m = getMotion(MOTION.dissolve);
+    const tl = gsap.timeline({
+      onComplete: () => {
+        cleanupGhostState();
+        transitionToPortrait();
+      }
+    });
+
+    tl.to(ghostInvite, { opacity: 0, duration: 0.4, ease: m.ease })
+      .to(ghostBack, { opacity: 0, duration: 0.4, ease: m.ease }, '<')
+      .to(ghostDismiss, { opacity: 0, duration: 0.4, ease: m.ease }, '<')
+      .to(document.getElementById('ghostCounter'), { opacity: 0, duration: 0.4, ease: m.ease }, '<')
+      .to(ghostLayer, { opacity: 0, duration: m.duration, ease: m.ease }, '-=0.2');
+  }
+
+  function cleanupGhostState() {
+    if (ghostAutoDismissTimer) {
+      clearTimeout(ghostAutoDismissTimer);
+      ghostAutoDismissTimer = null;
+    }
+    ghostLayer.classList.remove('visible');
+    pillPool.classList.remove('ghost-view');
+    pillPool.classList.remove('editable');
+    ghostDismiss.style.pointerEvents = 'none';
+    ghostBack.style.pointerEvents = 'none';
+    gsap.set([ghostLayer, ghostInvite, ghostDismiss, ghostBack, document.getElementById('ghostCounter')], { opacity: 0 });
+    ghostText.innerHTML = '';
+    ghostWordSpans = [];
+  }
+
+  function ghostBackToVoid() {
+    const m = getMotion(MOTION.dissolve);
+    const tl = gsap.timeline({
+      onComplete: () => {
+        cleanupGhostState();
+        // Restore void state
+        currentAct = 'VOID';
+        pillPool.classList.add('passive');
+        typingArea.classList.remove('dimmed');
+        cursorEl.style.display = '';
+        framing.style.opacity = '';
+        framing.style.transition = '';
+        framing.classList.add('dimmed');
+        // Show void buttons if pills exist
+        if (pillPool.querySelectorAll('.pill').length > 0) {
+          clearAllBtn.classList.add('visible');
+          forwardBtn.classList.add('visible');
+        }
+        hiddenInput.focus();
+      }
+    });
+
+    tl.to(ghostInvite, { opacity: 0, duration: 0.4, ease: m.ease })
+      .to(ghostBack, { opacity: 0, duration: 0.4, ease: m.ease }, '<')
+      .to(ghostDismiss, { opacity: 0, duration: 0.4, ease: m.ease }, '<')
+      .to(ghostLayer, { opacity: 0, duration: m.duration, ease: m.ease }, '-=0.2')
+      .to(framing, { opacity: 1, duration: 0.6, ease: 'power1.inOut' }, '-=0.4');
+  }
+
+  ghostDismiss.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dismissGhostLayer();
+  });
+
+  ghostBack.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ghostBackToVoid();
+  });
+
+
+  function transitionToPortrait() {
+    const comingFromGhost = currentAct === 'GHOST';
+    currentAct = 'PORTRAIT';
+
+    // These may already be done if coming from ghost layer
+    if (!comingFromGhost) {
+      if (doneInviteTimer) clearTimeout(doneInviteTimer);
+      hideDoneInvite();
+      typingArea.classList.add('dimmed');
+      cursorEl.style.display = 'none';
+      hiddenInput.blur();
+      if (punctTimer) clearTimeout(punctTimer);
+      if (pauseTimer) clearTimeout(pauseTimer);
+    }
 
     // Activate pills — remove passive, center the pool, straighten pills
     pillPool.classList.remove('passive');
@@ -2628,14 +3116,25 @@
     const m = getMotion(MOTION.transition);
     const tl = gsap.timeline();
 
-    tl.to(framing, { opacity: 0, duration: m.duration, ease: m.ease })
-      .call(() => witnessingText.classList.add('visible'))
-      .call(() => {
-        pillHints.classList.add('visible');
-        backBtn.classList.add('visible');
-        addOwnBtn.classList.add('visible');
-        positionAddOwnBtn();
-      }, null, '+=0.7');
+    if (comingFromGhost) {
+      // Framing already hidden — go straight to witnessing
+      tl.call(() => witnessingText.classList.add('visible'))
+        .call(() => {
+          pillHints.classList.add('visible');
+          backBtn.classList.add('visible');
+          addOwnBtn.classList.add('visible');
+          positionAddOwnBtn();
+        }, null, '+=0.7');
+    } else {
+      tl.to(framing, { opacity: 0, duration: m.duration, ease: m.ease })
+        .call(() => witnessingText.classList.add('visible'))
+        .call(() => {
+          pillHints.classList.add('visible');
+          backBtn.classList.add('visible');
+          addOwnBtn.classList.add('visible');
+          positionAddOwnBtn();
+        }, null, '+=0.7');
+    }
   }
 
   const keepBtn = document.getElementById('keepBtn');
@@ -2677,6 +3176,9 @@
   function returnToVoid() {
     // Close stream overlay if open
     if (currentAct === 'STREAM') closeStream();
+
+    // Clean up ghost layer if it's still showing
+    cleanupGhostState();
 
     currentAct = 'VOID';
 
@@ -2730,6 +3232,9 @@
 
     // Close stream if open
     if (currentAct === 'STREAM') closeStream();
+
+    // Clean up ghost layer
+    cleanupGhostState();
 
     // Reset act
     currentAct = 'VOID';
@@ -2834,10 +3339,15 @@
     if (!isStacking) collectedPool.delete(label);
 
     // Animate out
-    pill.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    pill.style.opacity = '0';
-    pill.style.transform = 'scale(0.8)';
-    setTimeout(() => pill.remove(), 300);
+    const m = getMotion(MOTION.dissolve);
+    gsap.to(pill, {
+      opacity: 0, scale: 0.8,
+      duration: 0.3, ease: m.ease,
+      onComplete: () => {
+        pill.remove();
+        if (currentAct === 'GHOST') updateGhostCounter();
+      }
+    });
   }
 
 
