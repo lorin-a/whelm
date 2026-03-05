@@ -18,6 +18,20 @@
     --linger: #5c4f6b;
     --linger-border: rgba(92, 79, 107, 0.3);
     --linger-bg: rgba(92, 79, 107, 0.04);
+
+    /* ---- Layout grid zones (% of viewport height) ----
+       These prevent components from overlapping across states.
+       Zone A: nav/invite       0% – 12%
+       Zone B: content scroll  12% – 44%
+       Zone C: separator/CTA   44% – 56%
+       Zone D: pill pool       56% – 100%
+    */
+    --zone-a-end: 12%;
+    --zone-b-start: 12%;
+    --zone-b-end: 44%;
+    --zone-c-start: 44%;
+    --zone-c-end: 56%;
+    --zone-d-start: 56%;
   }
 
   body {
@@ -299,13 +313,15 @@
   /* ---- Witnessing text ---- */
   .witnessing-text {
     position: absolute;
-    top: 8%;
+    top: 4%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
     text-align: center;
     width: 85%;
     max-width: 400px;
+    max-height: calc(var(--zone-c-start) - 6%);
+    overflow-y: auto;
     font-family: 'DM Sans', sans-serif;
     font-size: 16px;
     font-weight: 300;
@@ -368,7 +384,7 @@
 
   .pill-pool.ghost-view {
     bottom: 40px;
-    top: 52%;
+    top: var(--zone-d-start);
     transform: translateX(-50%);
     flex-direction: column;
     justify-content: center;
@@ -381,7 +397,7 @@
 
   .pill-pool.portrait {
     bottom: 80px;
-    top: 42%;
+    top: var(--zone-c-start);
     transform: translateX(-50%);
     flex-direction: column;
     justify-content: center;
@@ -927,14 +943,14 @@
   /* ---- Ghost text recovery layer ---- */
   .ghost-layer {
     position: absolute;
-    top: 0;
+    top: var(--zone-b-start);
     left: 0;
     right: 0;
-    bottom: 50%;
+    bottom: calc(100% - var(--zone-b-end));
     z-index: 14;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 100px 24px 24px;
+    padding: 12px 24px 24px;
     opacity: 0;
     pointer-events: none;
   }
@@ -992,13 +1008,27 @@
     pointer-events: none;
   }
 
+  .ghost-word.selected {
+    background: rgba(92, 79, 107, 0.22);
+    border-radius: 3px;
+    color: var(--linger);
+    font-weight: 400;
+  }
+
+
   .ghost-invite {
     position: absolute;
-    top: 80px;
+    top: 2%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
     text-align: center;
+    width: 85%;
+    max-width: 400px;
+    max-height: var(--zone-a-end);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
     font-weight: 300;
@@ -1006,12 +1036,11 @@
     color: var(--text-faint);
     opacity: 0;
     pointer-events: none;
-    white-space: nowrap;
   }
 
   .ghost-counter {
     position: absolute;
-    top: 49%;
+    top: var(--zone-c-start);
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
@@ -1032,7 +1061,7 @@
 
   .ghost-dismiss {
     position: absolute;
-    top: 52%;
+    top: calc(var(--zone-c-start) + 4%);
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
@@ -1088,9 +1117,8 @@
   }
 
   @media (max-width: 600px) {
-    .ghost-layer { padding: 80px 20px 20px; }
-    .ghost-invite { top: 50px; font-size: 14px; }
-    .ghost-dismiss { top: 46%; }
+    .ghost-layer { padding: 8px 20px 20px; }
+    .ghost-invite { font-size: 14px; }
     .ghost-back { top: 32px; left: 8px; }
   }
 
@@ -1173,7 +1201,7 @@
   <div class="ghost-layer" id="ghostLayer" role="region" aria-label="Your dissolved text — tap any word to add it to your portrait">
     <div class="ghost-text" id="ghostText"></div>
   </div>
-  <p class="ghost-invite" id="ghostInvite">if something's missing, it's still here</p>
+  <p class="ghost-invite" id="ghostInvite">if something's missing, it's still here — tap a word or drag across a phrase</p>
   <span class="ghost-counter" id="ghostCounter" aria-live="polite"></span>
   <button class="ghost-dismiss" id="ghostDismiss" type="button">that's everything</button>
   <button class="ghost-back" id="ghostBack" type="button" aria-label="Back to writing">&#8592;</button>
@@ -2922,14 +2950,9 @@
       }
     }
 
-    // Attach event listeners
+    // Attach keyboard listeners (tap/drag handled at ghost layer level)
     ghostWordSpans.forEach(span => {
       if (span.classList.contains('already-caught')) return;
-
-      span.addEventListener('click', (e) => {
-        e.stopPropagation();
-        claimGhostWord(span);
-      });
 
       span.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -2941,6 +2964,189 @@
   }
 
   const PORTRAIT_MAX_PILLS = 10;
+  const GHOST_PHRASE_MAX_WORDS = 5;
+
+  // Ghost drag-select state
+  let ghostSelection = null; // { anchorIdx, currentIdx }
+  let ghostDragActive = false;
+  let ghostDragLocked = null; // null | 'horizontal' | 'vertical'
+  let ghostDragOrigin = null; // { x, y }
+  const DRAG_LOCK_THRESHOLD = 8; // px before direction locks
+
+  function getGhostWordFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    if (el.classList && el.classList.contains('ghost-word')) return el;
+    if (el.parentElement && el.parentElement.classList && el.parentElement.classList.contains('ghost-word')) return el.parentElement;
+    return null;
+  }
+
+  function clearGhostSelection() {
+    ghostWordSpans.forEach(s => s.classList.remove('selected'));
+    ghostSelection = null;
+    ghostDragActive = false;
+    ghostDragLocked = null;
+    ghostDragOrigin = null;
+  }
+
+  function ghostHighlightRange(fromIdx, toIdx) {
+    const lo = Math.min(fromIdx, toIdx);
+    // Enforce 5-word max
+    const hi = Math.min(Math.max(fromIdx, toIdx), lo + GHOST_PHRASE_MAX_WORDS - 1);
+    ghostWordSpans.forEach((s, i) => {
+      if (i >= lo && i <= hi) s.classList.add('selected');
+      else s.classList.remove('selected');
+    });
+    // Clamp currentIdx to enforced range
+    if (ghostSelection) {
+      if (ghostSelection.currentIdx > ghostSelection.anchorIdx) {
+        ghostSelection.currentIdx = Math.min(ghostSelection.currentIdx, ghostSelection.anchorIdx + GHOST_PHRASE_MAX_WORDS - 1);
+      } else {
+        ghostSelection.currentIdx = Math.max(ghostSelection.currentIdx, ghostSelection.anchorIdx - GHOST_PHRASE_MAX_WORDS + 1);
+      }
+    }
+  }
+
+  function handleGhostApprove() {
+    if (!ghostSelection) return;
+    if (getActivePillCount() >= PORTRAIT_MAX_PILLS) { clearGhostSelection(); return; }
+
+    const lo = Math.min(ghostSelection.anchorIdx, ghostSelection.currentIdx);
+    const hi = Math.max(ghostSelection.anchorIdx, ghostSelection.currentIdx);
+
+    // Build phrase label
+    const words = [];
+    for (let i = lo; i <= hi; i++) {
+      words.push(ghostWordSpans[i].textContent);
+    }
+    const label = words.join(' ').toLowerCase().trim();
+    if (!label) { clearGhostSelection(); return; }
+
+    // Mark as claimed
+    for (let i = lo; i <= hi; i++) {
+      ghostWordSpans[i].classList.add('claimed');
+      ghostWordSpans[i].classList.remove('selected');
+      ghostWordSpans[i].removeAttribute('tabindex');
+    }
+
+    // Get position for pill drop
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const lastRect = ghostWordSpans[hi].getBoundingClientRect();
+    const fromX = lastRect.left - canvasRect.left + lastRect.width / 2;
+    const fromY = lastRect.top - canvasRect.top + lastRect.height / 2;
+
+    dropPill(label, fromX, fromY, false);
+
+    setTimeout(() => updateGhostCounter(), 100);
+    clearGhostSelection();
+  }
+
+  // Ghost layer touch events — direction-locked drag
+  ghostText.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const span = getGhostWordFromPoint(touch.clientX, touch.clientY);
+    if (!span || span.classList.contains('claimed') || span.classList.contains('already-caught')) return;
+
+    clearGhostSelection();
+    const idx = parseInt(span.dataset.idx);
+    ghostSelection = { anchorIdx: idx, currentIdx: idx };
+    ghostDragOrigin = { x: touch.clientX, y: touch.clientY };
+    ghostDragLocked = null;
+    ghostDragActive = true;
+    ghostHighlightRange(idx, idx);
+  }, { passive: true });
+
+  ghostText.addEventListener('touchmove', (e) => {
+    if (!ghostDragActive || !ghostSelection || !ghostDragOrigin) return;
+    const touch = e.touches[0];
+
+    // Direction lock: decide on first significant move
+    if (!ghostDragLocked) {
+      const dx = Math.abs(touch.clientX - ghostDragOrigin.x);
+      const dy = Math.abs(touch.clientY - ghostDragOrigin.y);
+      if (dx < DRAG_LOCK_THRESHOLD && dy < DRAG_LOCK_THRESHOLD) return;
+      ghostDragLocked = (dx >= dy) ? 'horizontal' : 'vertical';
+    }
+
+    if (ghostDragLocked === 'vertical') {
+      // Let scroll happen naturally, cancel selection
+      clearGhostSelection();
+      return;
+    }
+
+    // Horizontal — select words
+    e.preventDefault();
+    const span = getGhostWordFromPoint(touch.clientX, touch.clientY);
+    if (!span || span.classList.contains('claimed') || span.classList.contains('already-caught')) return;
+    const idx = parseInt(span.dataset.idx);
+    ghostSelection.currentIdx = idx;
+    ghostHighlightRange(ghostSelection.anchorIdx, idx);
+  }, { passive: false });
+
+  ghostText.addEventListener('touchend', (e) => {
+    if (!ghostDragActive || !ghostSelection) return;
+    ghostDragActive = false;
+
+    // Single tap — claim one word
+    if (ghostSelection.anchorIdx === ghostSelection.currentIdx) {
+      const span = ghostWordSpans[ghostSelection.anchorIdx];
+      if (span && !span.classList.contains('claimed') && !span.classList.contains('already-caught')) {
+        claimGhostWord(span);
+      }
+      clearGhostSelection();
+      return;
+    }
+
+    // Multi-word drag — auto-claim the phrase
+    handleGhostApprove();
+  });
+
+  // Ghost layer mouse events (desktop)
+  ghostText.addEventListener('mousedown', (e) => {
+    const span = getGhostWordFromPoint(e.clientX, e.clientY);
+    if (!span || span.classList.contains('claimed') || span.classList.contains('already-caught')) return;
+    e.preventDefault();
+    clearGhostSelection();
+    const idx = parseInt(span.dataset.idx);
+    ghostSelection = { anchorIdx: idx, currentIdx: idx };
+    ghostDragActive = true;
+    ghostHighlightRange(idx, idx);
+  });
+
+  ghostText.addEventListener('mousemove', (e) => {
+    if (!ghostDragActive || !ghostSelection) return;
+    const span = getGhostWordFromPoint(e.clientX, e.clientY);
+    if (!span || span.classList.contains('claimed') || span.classList.contains('already-caught')) return;
+    const idx = parseInt(span.dataset.idx);
+    ghostSelection.currentIdx = idx;
+    ghostHighlightRange(ghostSelection.anchorIdx, idx);
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (!ghostDragActive || !ghostSelection) return;
+    ghostDragActive = false;
+
+    if (ghostSelection.anchorIdx === ghostSelection.currentIdx) {
+      const span = ghostWordSpans[ghostSelection.anchorIdx];
+      if (span && !span.classList.contains('claimed') && !span.classList.contains('already-caught')) {
+        claimGhostWord(span);
+      }
+      clearGhostSelection();
+      return;
+    }
+
+    // Multi-word drag — auto-claim the phrase
+    handleGhostApprove();
+  });
+
+  // Tap on ghost layer background dismisses selection
+  ghostLayer.addEventListener('click', (e) => {
+    if (e.target === ghostLayer || e.target === ghostText) {
+      if (ghostSelection && !ghostDragActive) {
+        clearGhostSelection();
+      }
+    }
+  });
 
   function getActivePillCount() {
     return pillPool.querySelectorAll('.pill').length;
@@ -3033,6 +3239,7 @@
     ghostDismiss.style.pointerEvents = 'none';
     ghostBack.style.pointerEvents = 'none';
     gsap.set([ghostLayer, ghostInvite, ghostDismiss, ghostBack, document.getElementById('ghostCounter')], { opacity: 0 });
+    clearGhostSelection();
     ghostText.innerHTML = '';
     ghostWordSpans = [];
   }
@@ -3150,6 +3357,11 @@
   keepBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     hideDoneInvite();
+    // Show forward arrow so user can proceed without adding more
+    if (pillPool.querySelectorAll('.pill').length > 0) {
+      forwardBtn.classList.add('visible');
+      clearAllBtn.classList.add('visible');
+    }
     hiddenInput.focus();
   });
 
