@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Whelm — Pour, Sift, Mirror</title>
+
+<!-- Google Fonts: Crimson Pro (subhead) + Noto Sans (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- TODO: Adobe Fonts kit for P22 Mackinac Pro
+     Replace ABCD1234 with the kit ID from your Adobe Fonts dashboard
+     <link rel="stylesheet" href="https://use.typekit.net/ABCD1234.css">
+-->
+
+<style>
+  /* ============================================================
+     BRAND TOKENS (mirrored from src/brand-tokens.css)
+     Inlined for embed self-containment.
+     ============================================================ */
+  :root {
+    /* Core palette */
+    --color-void:           #040008;
+    --color-deep:           #1F0536;
+    --color-shadow:         #49325D;
+    --color-amethyst:       #895FAE;
+    --color-lavender:       #BDB7E9;
+    --color-lavender-soft:  #BDB7E999;
+    --color-haze:           #F0E2FF;
+    --color-paper:          #F3EFF7;
+
+    --gradient-pulse: linear-gradient(107deg, #6825A2 6.34%, #8552B2 43.93%, #BDB7E9 74.46%);
+
+    /* Semantic surfaces */
+    --surface-page:           var(--color-haze);
+    --surface-card:           var(--color-paper);
+    --text-primary:           var(--color-deep);
+    --text-secondary:         var(--color-shadow);
+    --text-muted:             rgba(73, 50, 93, 0.6);
+    --rule-line:              rgba(73, 50, 93, 0.2);
+
+    --surface-void:           var(--color-void);
+    --surface-deep:           var(--color-deep);
+    --text-on-dark:           var(--color-haze);
+    --text-on-dark-muted:     var(--color-lavender-soft);
+
+    --accent:                 var(--color-amethyst);
+    --focus-ring:             var(--color-amethyst);
+
+    /* Typography */
+    --font-display:  "P22 Mackinac Pro", "Crimson Pro", Georgia, serif;
+    --font-subhead:  "Crimson Pro", Georgia, "Times New Roman", serif;
+    --font-body:     "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    --text-xs:    0.75rem;
+    --text-sm:    0.875rem;
+    --text-base:  1rem;
+    --text-md:    1.125rem;
+    --text-lg:    1.5rem;
+    --text-xl:    2rem;
+    --text-2xl:   2.75rem;
+    --text-3xl:   4rem;
+
+    --leading-tight:  1.15;
+    --leading-snug:   1.3;
+    --leading-normal: 1.5;
+    --leading-body:   1.6;
+
+    /* Motion */
+    --ease-glide:   cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-settle:  cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-calm:    cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-organic: cubic-bezier(0.45, 0, 0.55, 1);
+
+    --dur-instant: 120ms;
+    --dur-quick:   240ms;
+    --dur-soft:    420ms;
+    --dur-breath:  800ms;
+    --dur-settle:  1200ms;
+    --dur-reconstitute: 2400ms;
+
+    /* Layout */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4.5rem;
+
+    --radius-sm: 6px;
+    --radius-md: 14px;
+    --radius-lg: 24px;
+    --radius-pill: 999px;
+
+    --touch-min: 44px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --dur-instant: 0.01ms;
+      --dur-quick: 0.01ms;
+      --dur-soft: 0.01ms;
+      --dur-breath: 0.01ms;
+      --dur-settle: 0.01ms;
+      --dur-reconstitute: 0.01ms;
+    }
+  }
+
+  /* ============================================================
+     RESET & BASE
+     ============================================================ */
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--surface-void);
+    color: var(--text-on-dark);
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ============================================================
+     EMBED ROOT — iframe-friendly, fills container
+     ============================================================ */
+  .embed-root {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--surface-void);
+    transition: background-color var(--dur-reconstitute) var(--ease-calm);
+  }
+
+  .embed-root.surface-light {
+    background: var(--surface-page);
+  }
+
+  /* ============================================================
+     CHROME — thin top strip
+     ============================================================ */
+  .chrome {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    pointer-events: none;
+  }
+
+  .chrome > * {
+    pointer-events: auto;
+  }
+
+  .chrome-title {
+    font-family: var(--font-subhead);
+    font-style: italic;
+    font-size: var(--text-sm);
+    color: var(--text-on-dark-muted);
+    letter-spacing: 0.04em;
+    transition: color var(--dur-reconstitute) var(--ease-calm);
+  }
+
+  .surface-light .chrome-title {
+    color: var(--text-muted);
+  }
+
+  .chrome-reset {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-on-dark-muted);
+    padding: var(--space-2) var(--space-3);
+    min-height: var(--touch-min);
+    min-width: var(--touch-min);
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-soft) var(--ease-glide), color var(--dur-reconstitute) var(--ease-calm);
+  }
+
+  .chrome-reset.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .chrome-reset:hover {
+    color: var(--text-on-dark);
+  }
+
+  .surface-light .chrome-reset {
+    color: var(--text-muted);
+  }
+
+  .surface-light .chrome-reset:hover {
+    color: var(--text-primary);
+  }
+
+  /* ============================================================
+     PHASE CONTAINERS
+     ============================================================ */
+  .phase {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-soft) var(--ease-calm);
+  }
+
+  .phase.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ============================================================
+     ENTRY SCREEN
+     ============================================================ */
+  .entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-6);
+  }
+
+  .entry-mark {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    color: var(--text-on-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-3);
+  }
+
+  .entry-mark .dot {
+    color: var(--accent);
+  }
+
+  .entry-tagline {
+    font-family: var(--font-subhead);
+    font-style: italic;
+    font-size: var(--text-md);
+    color: var(--text-on-dark-muted);
+    max-width: 32ch;
+    line-height: var(--leading-snug);
+    margin-bottom: var(--space-7);
+  }
+
+  .entry-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .entry-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--text-on-dark);
+    background: transparent;
+    border: 1px solid var(--color-lavender-soft);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    min-height: var(--touch-min);
+    transition: background-color var(--dur-quick) var(--ease-glide),
+                border-color var(--dur-quick) var(--ease-glide),
+                transform var(--dur-quick) var(--ease-glide);
+  }
+
+  .entry-btn:hover,
+  .entry-btn:focus-visible {
+    background: rgba(189, 183, 233, 0.08);
+    border-color: var(--color-lavender);
+  }
+
+  .entry-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .entry-btn-primary:hover,
+  .entry-btn-primary:focus-visible {
+    background: color-mix(in srgb, var(--accent) 85%, white);
+    border-color: var(--accent);
+  }
+
+  .entry-secondary-note {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-on-dark-muted);
+    margin-top: var(--space-4);
+    max-width: 36ch;
+    line-height: var(--leading-normal);
+  }
+
+  /* ============================================================
+     POUR — typing surface + rain
+     ============================================================ */
+  .pour {
+    /* container only; rain canvas + typing area are absolutely positioned */
+  }
+
+  .void-canvas {
+    position: absolute;
+    inset: 0;
+    cursor: text;
+    overflow: hidden;
+  }
+
+  .rain-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .pour-prompt {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 90%;
+    max-width: 460px;
+    text-align: center;
+    font-family: var(--font-subhead);
+    font-style: italic;
+    font-size: var(--text-md);
+    color: var(--text-on-dark-muted);
+    line-height: var(--leading-snug);
+    transition: opacity var(--dur-soft) var(--ease-glide);
+  }
+
+  .pour-prompt.dimmed {
+    opacity: 0.4;
+  }
+
+  .typing-area {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    width: 92%;
+    max-width: 520px;
+    text-align: center;
+    cursor: text;
+  }
+
+  .typing-display {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 400;
+    line-height: 1.85;
+    color: var(--text-on-dark);
+    min-height: 30px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    position: relative;
+    display: inline;
+  }
+
+  .typing-display .char {
+    display: inline;
+    transition: color var(--dur-soft) var(--ease-glide), opacity var(--dur-soft) var(--ease-glide);
+  }
+
+  .typing-display .char.trail {
+    color: var(--text-on-dark-muted);
+    opacity: 0.4;
+  }
+
+  .placeholder {
+    color: var(--text-on-dark-muted);
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: var(--text-md);
+    pointer-events: none;
+    transition: opacity var(--dur-soft) var(--ease-glide);
+    letter-spacing: 0.01em;
+    opacity: 0.6;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 1.5px;
+    height: 1.15em;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1.1s ease infinite;
+  }
+
+  @keyframes blink {
+    0%, 45% { opacity: 1; }
+    55%, 100% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor-blink { animation: none; opacity: 0.7; }
+  }
+
+  .hidden-input {
+    position: absolute;
+    left: -10000px;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  /* Done invite — appears after pause */
+  .done-invite {
+    position: absolute;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 18;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-soft) var(--ease-glide);
+  }
+
+  .done-invite.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .done-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-on-dark);
+    background: transparent;
+    border: 1px solid var(--color-lavender-soft);
+    border-radius: var(--radius-pill);
+    padding: var(--space-3) var(--space-5);
+    min-height: var(--touch-min);
+    transition: background-color var(--dur-quick) var(--ease-glide), border-color var(--dur-quick) var(--ease-glide);
+  }
+
+  .done-btn:hover,
+  .done-btn:focus-visible {
+    background: rgba(189, 183, 233, 0.1);
+    border-color: var(--color-lavender);
+  }
+
+  /* Sample mode skip affordance — sits below chrome bar */
+  .sample-skip {
+    position: absolute;
+    top: 68px;
+    right: var(--space-5);
+    z-index: 25;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-on-dark-muted);
+    padding: var(--space-2) var(--space-3);
+    min-height: var(--touch-min);
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-soft) var(--ease-glide);
+  }
+
+  .sample-skip.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sample-skip:hover {
+    color: var(--text-on-dark);
+  }
+
+  /* ============================================================
+     RECONSTITUTE — full text fades in, then surface crossfades light
+     ============================================================ */
+  .reconstitute {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-7) var(--space-5);
+  }
+
+  .reconstitute-inner {
+    width: 100%;
+    max-width: 640px;
+    max-height: 70vh;
+    overflow-y: auto;
+    text-align: left;
+  }
+
+  .reconstitute-text {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 400;
+    line-height: var(--leading-body);
+    color: var(--text-on-dark);
+    transition: color var(--dur-reconstitute) var(--ease-calm);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .surface-light .reconstitute-text {
+    color: var(--text-primary);
+  }
+
+  /* Word reveal animation */
+  .reveal-word {
+    display: inline;
+    opacity: 0;
+    transition: opacity var(--dur-breath) var(--ease-calm);
+  }
+
+  .reveal-word.shown {
+    opacity: 1;
+  }
+
+  /* ============================================================
+     SIFT (placeholder for Step 2)
+     ============================================================ */
+  .sift,
+  .mirror {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-7) var(--space-5);
+  }
+
+  .stub-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .stub-body {
+    font-family: var(--font-subhead);
+    font-style: italic;
+    font-size: var(--text-md);
+    color: var(--text-secondary);
+    max-width: 38ch;
+    line-height: var(--leading-body);
+    margin-bottom: var(--space-6);
+  }
+
+  .stub-text-preview {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    line-height: var(--leading-body);
+    max-width: 540px;
+    padding: var(--space-5);
+    background: var(--surface-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--rule-line);
+    margin-bottom: var(--space-5);
+    text-align: left;
+    white-space: pre-wrap;
+  }
+
+  .stub-cta {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: white;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-5);
+    min-height: var(--touch-min);
+    transition: background-color var(--dur-quick) var(--ease-glide);
+  }
+
+  .stub-cta:hover, .stub-cta:focus-visible {
+    background: color-mix(in srgb, var(--accent) 85%, white);
+  }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 480px) {
+    .entry-mark { font-size: var(--text-xl); }
+    .typing-display { font-size: var(--text-base); }
+    .reconstitute-text { font-size: var(--text-base); }
+  }
+</style>
+</head>
+<body>
+
+<div class="embed-root" id="embedRoot">
+
+  <header class="chrome">
+    <span class="chrome-title" id="chromeTitle">whelm — pour</span>
+    <button class="chrome-reset" id="chromeReset" type="button" aria-label="start over">start over</button>
+  </header>
+
+  <!-- ============================================================
+       PHASE: ENTRY
+       ============================================================ -->
+  <section class="phase entry active" data-phase="entry" aria-label="entry">
+    <h1 class="entry-mark">whelm<span class="dot">.</span></h1>
+    <p class="entry-tagline">a companion for coming back to yourself</p>
+
+    <div class="entry-actions">
+      <button class="entry-btn entry-btn-primary" id="btnPourOwn" type="button">
+        pour your own
+      </button>
+      <button class="entry-btn" id="btnPourSample" type="button">
+        watch a sample
+      </button>
+    </div>
+
+    <p class="entry-secondary-note">
+      your words stay on this page. nothing is saved or sent.
+    </p>
+  </section>
+
+  <!-- ============================================================
+       PHASE: POUR
+       ============================================================ -->
+  <section class="phase pour" data-phase="pour" aria-label="pour">
+    <div class="void-canvas" id="voidCanvas">
+      <canvas class="rain-canvas" id="rainCanvas" aria-hidden="true"></canvas>
+
+      <div class="pour-prompt" id="pourPrompt">
+        let it pour out. unfiltered. the words will fall.
+      </div>
+
+      <div class="typing-area" id="typingArea">
+        <div class="typing-display" id="typingDisplay">
+          <span class="placeholder" id="placeholder">begin typing…</span><span class="cursor-blink" id="cursor" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <input type="text" class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="pour your thoughts">
+
+      <button class="sample-skip" id="sampleSkip" type="button" aria-label="skip sample">skip ›</button>
+
+      <div class="done-invite" id="doneInvite">
+        <button class="done-btn" id="btnDone" type="button">i'm done</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PHASE: RECONSTITUTE
+       ============================================================ -->
+  <section class="phase reconstitute" data-phase="reconstitute" aria-label="reconstitute" aria-live="polite">
+    <div class="reconstitute-inner">
+      <div class="reconstitute-text" id="reconstituteText"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PHASE: SIFT (stub)
+       ============================================================ -->
+  <section class="phase sift" data-phase="sift" aria-label="sift">
+    <h2 class="stub-title">sift + blackout</h2>
+    <p class="stub-body">
+      coming next — read slowly, underline what lands in your body, watch the rest fall to black.
+    </p>
+    <div class="stub-text-preview" id="stubTextPreview"></div>
+    <button class="stub-cta" id="btnRestart" type="button">start over</button>
+  </section>
+
+  <!-- ============================================================
+       PHASE: MIRROR (stub)
+       ============================================================ -->
+  <section class="phase mirror" data-phase="mirror" aria-label="mirror">
+    <h2 class="stub-title">mirror</h2>
+    <p class="stub-body">
+      coming next — your selected words become a portrait you can shape and keep.
+    </p>
+    <button class="stub-cta" type="button" onclick="window.location.reload()">start over</button>
+  </section>
+
+</div>
+
+<script>
+'use strict';
+
+(function() {
+
+  // ============================================================
+  //  STATE
+  // ============================================================
+  const PHASES = ['entry', 'pour', 'reconstitute', 'sift', 'mirror'];
+  let phase = 'entry';
+  let mode = null; // 'own' | 'sample'
+
+  let fullText = '';
+  let words = []; // [{ text, startIdx, endIdx }]
+  let releasedUpTo = 0;
+  let hasStarted = false;
+  let isReleasing = false;
+
+  const TRAIL_DISTANCE = 4; // word lookback before trailing
+
+  let renderScheduled = false;
+  let releaseScheduled = false;
+  let pauseTimer = null;
+  let doneInviteTimer = null;
+  let sampleAbortController = null;
+
+  // Sample text — DRAFT, transcribed approximately from IMG_1759.
+  // Lorin to review wording before final.
+  const SAMPLE_TEXT = "i'm having a confusing day. i thought i did everything right. now my body hurts. i'm trying so hard and i feel in over my head with no clear answers. i get scared i'll always be this way. i'm too sensitive. i should be tougher. i just want to hide.";
+
+  // ============================================================
+  //  DOM REFS
+  // ============================================================
+  const root            = document.getElementById('embedRoot');
+  const chromeTitle     = document.getElementById('chromeTitle');
+  const chromeReset     = document.getElementById('chromeReset');
+  const btnPourOwn      = document.getElementById('btnPourOwn');
+  const btnPourSample   = document.getElementById('btnPourSample');
+  const voidCanvas      = document.getElementById('voidCanvas');
+  const rainCanvas      = document.getElementById('rainCanvas');
+  const rainCtx         = rainCanvas.getContext('2d');
+  const pourPrompt      = document.getElementById('pourPrompt');
+  const typingArea      = document.getElementById('typingArea');
+  const typingDisplay   = document.getElementById('typingDisplay');
+  const placeholder     = document.getElementById('placeholder');
+  const cursor          = document.getElementById('cursor');
+  const hiddenInput     = document.getElementById('hiddenInput');
+  const doneInvite      = document.getElementById('doneInvite');
+  const btnDone         = document.getElementById('btnDone');
+  const sampleSkip      = document.getElementById('sampleSkip');
+  const reconstituteText= document.getElementById('reconstituteText');
+  const stubTextPreview = document.getElementById('stubTextPreview');
+  const btnRestart      = document.getElementById('btnRestart');
+
+  const phaseNodes = {};
+  document.querySelectorAll('.phase').forEach(el => {
+    phaseNodes[el.dataset.phase] = el;
+  });
+
+  // ============================================================
+  //  PHASE TRANSITIONS
+  // ============================================================
+  function setPhase(next) {
+    if (next === phase) return;
+    const prev = phase;
+    phase = next;
+
+    PHASES.forEach(p => {
+      phaseNodes[p].classList.toggle('active', p === next);
+    });
+
+    updateChrome();
+    onPhaseEnter(next, prev);
+  }
+
+  function updateChrome() {
+    const titles = {
+      entry:        'whelm',
+      pour:         'whelm — pour',
+      reconstitute: 'whelm — pause',
+      sift:         'whelm — sift',
+      mirror:       'whelm — mirror',
+    };
+    chromeTitle.textContent = titles[phase];
+    chromeReset.classList.toggle('visible', phase !== 'entry');
+  }
+
+  function onPhaseEnter(next, prev) {
+    if (next === 'pour') {
+      resizeRainCanvas();
+      // Defer focus until phase fade-in completes (avoid mobile keyboard flash)
+      setTimeout(() => {
+        if (phase === 'pour' && mode === 'own') hiddenInput.focus();
+      }, 400);
+    }
+    if (next === 'reconstitute') {
+      runReconstitution();
+    }
+    if (next === 'sift') {
+      stubTextPreview.textContent = fullText;
+    }
+  }
+
+  // ============================================================
+  //  ENTRY HANDLERS
+  // ============================================================
+  btnPourOwn.addEventListener('click', () => {
+    mode = 'own';
+    setPhase('pour');
+  });
+
+  btnPourSample.addEventListener('click', () => {
+    mode = 'sample';
+    setPhase('pour');
+    sampleSkip.classList.add('visible');
+    setTimeout(() => startSample(), 700);
+  });
+
+  chromeReset.addEventListener('click', resetAll);
+  btnRestart && btnRestart.addEventListener('click', resetAll);
+
+  function resetAll() {
+    abortSample();
+    fullText = '';
+    words = [];
+    releasedUpTo = 0;
+    hasStarted = false;
+    isReleasing = false;
+    hiddenInput.value = '';
+    rainParticles.length = 0;
+    rainAlive = 0;
+    pourPrompt.classList.remove('dimmed');
+    placeholder.style.opacity = '';
+    doneInvite.classList.remove('visible');
+    sampleSkip.classList.remove('visible');
+    reconstituteText.innerHTML = '';
+    root.classList.remove('surface-light');
+    if (pauseTimer) clearTimeout(pauseTimer);
+    if (doneInviteTimer) clearTimeout(doneInviteTimer);
+    renderTypingLine();
+    setPhase('entry');
+  }
+
+  // ============================================================
+  //  SAMPLE AUTO-TYPER
+  // ============================================================
+  async function startSample() {
+    abortSample();
+    sampleAbortController = { aborted: false };
+    const ctrl = sampleAbortController;
+
+    // Focus is not needed for sample — we drive value directly
+    const baseDelay = 70;
+    const variance = 50;
+    const punctPause = 320;
+
+    for (let i = 0; i < SAMPLE_TEXT.length; i++) {
+      if (ctrl.aborted) return;
+      const ch = SAMPLE_TEXT[i];
+      hiddenInput.value += ch;
+      onInput();
+
+      let wait = baseDelay + Math.random() * variance;
+      if ('.,!?'.includes(ch)) wait += punctPause;
+      await sleep(wait);
+    }
+
+    // After sample finishes, show done invite
+    showDoneInvite();
+  }
+
+  function abortSample() {
+    if (sampleAbortController) sampleAbortController.aborted = true;
+    sampleAbortController = null;
+  }
+
+  sampleSkip.addEventListener('click', () => {
+    abortSample();
+    // Fast-forward: fill rest of sample text
+    if (mode === 'sample' && hiddenInput.value.length < SAMPLE_TEXT.length) {
+      hiddenInput.value = SAMPLE_TEXT;
+      onInput();
+    }
+    finishPour();
+  });
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ============================================================
+  //  TOKENIZE — simple word boundaries, NO charge detection
+  // ============================================================
+  function parseWords(text) {
+    const result = [];
+    const re = /\S+/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      result.push({ text: m[0], startIdx: m.index, endIdx: m.index + m[0].length });
+    }
+    return result;
+  }
+
+  // ============================================================
+  //  INPUT HANDLER
+  // ============================================================
+  hiddenInput.addEventListener('input', onInput);
+
+  hiddenInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && phase === 'pour') {
+      e.preventDefault();
+      finishPour();
+    }
+  });
+
+  voidCanvas.addEventListener('click', () => {
+    if (phase === 'pour' && mode === 'own') hiddenInput.focus();
+  });
+
+  function onInput() {
+    if (phase !== 'pour') return;
+
+    fullText = hiddenInput.value;
+    words = parseWords(fullText);
+
+    if (!hasStarted && fullText.length > 0) {
+      hasStarted = true;
+      pourPrompt.classList.add('dimmed');
+      placeholder.style.opacity = '0';
+    }
+
+    scheduleRender();
+    scheduleRelease();
+
+    // Done invite logic — show after pause when there's substantive text
+    if (doneInviteTimer) clearTimeout(doneInviteTimer);
+    if (fullText.trim().length > 12) {
+      doneInviteTimer = setTimeout(() => {
+        if (phase === 'pour') showDoneInvite();
+      }, mode === 'sample' ? 1200 : 4000);
+    } else {
+      hideDoneInvite();
+    }
+  }
+
+  function scheduleRender() {
+    if (renderScheduled) return;
+    renderScheduled = true;
+    requestAnimationFrame(() => {
+      renderScheduled = false;
+      renderTypingLine();
+    });
+  }
+
+  function scheduleRelease() {
+    if (releaseScheduled) return;
+    releaseScheduled = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        releaseScheduled = false;
+        releaseTrailing();
+      });
+    });
+  }
+
+  // ============================================================
+  //  RENDER TYPING LINE
+  // ============================================================
+  function renderTypingLine() {
+    // Clear everything except cursor
+    while (typingDisplay.firstChild && typingDisplay.firstChild !== cursor) {
+      typingDisplay.removeChild(typingDisplay.firstChild);
+    }
+
+    if (fullText.length === 0 && !hasStarted) {
+      typingDisplay.insertBefore(placeholder, cursor);
+      placeholder.style.opacity = '';
+      return;
+    }
+
+    if (placeholder.parentNode === typingDisplay) {
+      typingDisplay.removeChild(placeholder);
+    }
+
+    const visText = fullText.slice(releasedUpTo);
+
+    // Compute trail boundary (in chars)
+    let trailCharIdx = 0;
+    const trailWordIdx = words.length - TRAIL_DISTANCE;
+    if (trailWordIdx >= 0 && trailWordIdx < words.length) {
+      trailCharIdx = words[trailWordIdx].startIdx;
+    }
+
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < visText.length; i++) {
+      const gIdx = releasedUpTo + i;
+      const isTrail = gIdx < trailCharIdx;
+      const span = document.createElement('span');
+      span.className = isTrail ? 'char trail' : 'char';
+      span.textContent = visText[i];
+      frag.appendChild(span);
+    }
+
+    typingDisplay.insertBefore(frag, cursor);
+  }
+
+  // ============================================================
+  //  RELEASE TRAILING — chars beyond trail boundary become rain
+  // ============================================================
+  function releaseTrailing() {
+    if (isReleasing) return;
+    if (phase !== 'pour') return;
+
+    const trailWordIdx = words.length - TRAIL_DISTANCE;
+    if (trailWordIdx < 0) return;
+
+    const targetCharPos = words[trailWordIdx].startIdx;
+    if (targetCharPos <= releasedUpTo) return;
+
+    isReleasing = true;
+    try {
+      const canvasRect = voidCanvas.getBoundingClientRect();
+      const trailChars = typingDisplay.querySelectorAll('.char.trail');
+      const charData = [];
+      trailChars.forEach(c => {
+        const r = c.getBoundingClientRect();
+        charData.push({
+          char: c.textContent,
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+        });
+      });
+
+      releasedUpTo = targetCharPos;
+      spawnRain(charData);
+      renderTypingLine();
+    } finally {
+      isReleasing = false;
+    }
+  }
+
+  // ============================================================
+  //  RAIN — Canvas particle system (ported from v9, parser-free)
+  // ============================================================
+  let rainParticles = [];
+  let rainAlive = 0;
+  let rainLoopRunning = false;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let rainColor = '#F0E2FF';
+
+  function resizeRainCanvas() {
+    const rect = voidCanvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    rainCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    rainCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    rainCanvas.style.width = rect.width + 'px';
+    rainCanvas.style.height = rect.height + 'px';
+    rainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Match typing display font for visual coherence
+    const cs = getComputedStyle(typingDisplay);
+    rainCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    rainCtx.textAlign = 'center';
+    rainCtx.textBaseline = 'middle';
+    // Pull text-on-dark token at runtime for accuracy
+    rainColor = getComputedStyle(document.documentElement).getPropertyValue('--text-on-dark').trim() || '#F0E2FF';
+  }
+  window.addEventListener('resize', resizeRainCanvas);
+
+  function spawnRain(charData) {
+    if (prefersReducedMotion.matches) return;
+
+    const canvasH = voidCanvas.offsetHeight;
+    let delayIdx = 0;
+
+    for (let i = 0; i < charData.length; i++) {
+      const cd = charData[i];
+      if (cd.char.trim() === '') continue;
+
+      const endY = canvasH - 60 - Math.random() * 40;
+      rainParticles.push({
+        char: cd.char,
+        x: cd.x,
+        y: cd.y,
+        totalFall: endY - cd.y,
+        xDrift: -15 + Math.random() * 30,
+        rotation: -10 + Math.random() * 20,
+        delay: delayIdx * 20 + Math.random() * 50,
+        duration: 2000 + Math.random() * 1500,
+        startTime: 0,
+        dead: false,
+      });
+      delayIdx++;
+    }
+
+    rainAlive = rainParticles.length;
+    if (!rainLoopRunning && rainAlive > 0) {
+      rainLoopRunning = true;
+      requestAnimationFrame(animateRain);
+    }
+  }
+
+  function animateRain(now) {
+    const dpr = window.devicePixelRatio || 1;
+    const cw = rainCanvas.width / dpr;
+    const ch = rainCanvas.height / dpr;
+    rainCtx.clearRect(0, 0, cw, ch);
+
+    let alive = 0;
+    for (let i = 0; i < rainParticles.length; i++) {
+      const p = rainParticles[i];
+      if (p.dead) continue;
+
+      if (p.startTime === 0) p.startTime = now + p.delay;
+      if (now < p.startTime) { alive++; continue; }
+
+      const elapsed = now - p.startTime;
+      const t = Math.min(elapsed / p.duration, 1);
+      if (t >= 1) { p.dead = true; continue; }
+
+      alive++;
+      const eased = Math.pow(t, 1.6);
+
+      let opacity;
+      if (t < 0.06) opacity = (t / 0.06) * 0.5;
+      else if (t < 0.6) opacity = 0.5 - t * 0.15;
+      else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
+      if (opacity <= 0) continue;
+
+      const cx = p.x + eased * p.xDrift;
+      const cy = p.y + eased * p.totalFall;
+      const rot = (eased * p.rotation * Math.PI) / 180;
+
+      rainCtx.save();
+      rainCtx.globalAlpha = opacity;
+      rainCtx.translate(cx, cy);
+      rainCtx.rotate(rot);
+      rainCtx.fillStyle = rainColor;
+      rainCtx.fillText(p.char, 0, 0);
+      rainCtx.restore();
+    }
+
+    if (alive > 0) {
+      requestAnimationFrame(animateRain);
+    } else {
+      rainParticles.length = 0;
+      rainLoopRunning = false;
+    }
+  }
+
+  // ============================================================
+  //  DONE INVITE
+  // ============================================================
+  function showDoneInvite() {
+    if (fullText.trim().length < 5) return;
+    doneInvite.classList.add('visible');
+  }
+
+  function hideDoneInvite() {
+    doneInvite.classList.remove('visible');
+  }
+
+  btnDone.addEventListener('click', finishPour);
+
+  // ============================================================
+  //  FINISH POUR → trigger reconstitution
+  // ============================================================
+  function finishPour() {
+    if (phase !== 'pour') return;
+    abortSample();
+    if (pauseTimer) clearTimeout(pauseTimer);
+    if (doneInviteTimer) clearTimeout(doneInviteTimer);
+
+    // Spawn rain for any visible (un-released) text so the typing
+    // line clears before reconstitution
+    if (!prefersReducedMotion.matches) {
+      const canvasRect = voidCanvas.getBoundingClientRect();
+      const allChars = typingDisplay.querySelectorAll('.char');
+      const charData = [];
+      allChars.forEach(c => {
+        const r = c.getBoundingClientRect();
+        charData.push({
+          char: c.textContent,
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+        });
+      });
+      spawnRain(charData);
+    }
+
+    releasedUpTo = fullText.length;
+    renderTypingLine();
+    hideDoneInvite();
+    sampleSkip.classList.remove('visible');
+
+    // Brief beat for rain to settle, then move to reconstitution
+    setTimeout(() => setPhase('reconstitute'), 800);
+  }
+
+  // ============================================================
+  //  RECONSTITUTION — text fades back in, then surface goes light
+  // ============================================================
+  function runReconstitution() {
+    // Build word-by-word reveal
+    reconstituteText.innerHTML = '';
+    const reveals = [];
+    const tokens = fullText.split(/(\s+)/); // keep whitespace as tokens
+
+    tokens.forEach(tok => {
+      if (tok.length === 0) return;
+      if (/^\s+$/.test(tok)) {
+        reconstituteText.appendChild(document.createTextNode(tok));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'reveal-word';
+        span.textContent = tok;
+        reconstituteText.appendChild(span);
+        reveals.push(span);
+      }
+    });
+
+    if (prefersReducedMotion.matches) {
+      reveals.forEach(s => s.classList.add('shown'));
+      // Crossfade surface after a small beat
+      setTimeout(() => root.classList.add('surface-light'), 400);
+      // Jump to sift after a moment
+      setTimeout(() => setPhase('sift'), 1400);
+      return;
+    }
+
+    // Stagger reveal across ~1.4s, capped at 28ms/word for long text
+    const total = reveals.length;
+    const span = Math.min(1400, Math.max(600, total * 28));
+    const step = total > 0 ? span / total : 0;
+
+    reveals.forEach((s, i) => {
+      setTimeout(() => s.classList.add('shown'), i * step);
+    });
+
+    // Once all words are visible, hold for a beat, then crossfade surface
+    const fullDelay = total * step + 600;
+    setTimeout(() => {
+      root.classList.add('surface-light');
+    }, fullDelay);
+
+    // Move to sift after surface settles
+    setTimeout(() => setPhase('sift'), fullDelay + 1800);
+  }
+
+  // ============================================================
+  //  INIT
+  // ============================================================
+  resizeRainCanvas();
+  updateChrome();
+
+})();
+</script>
+</body>
+</html>
