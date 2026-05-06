@@ -10,10 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- TODO: Adobe Fonts kit for P22 Mackinac Pro
-     Replace ABCD1234 with the kit ID from your Adobe Fonts dashboard
-     <link rel="stylesheet" href="https://use.typekit.net/ABCD1234.css">
--->
+<!-- Adobe Fonts: P22 Mackinac Pro (display) -->
+<link rel="stylesheet" href="https://use.typekit.net/ryb0aoq.css">
 
 <style>
   /* ============================================================
@@ -31,15 +29,11 @@
     --color-haze:           #F0E2FF;
     --color-paper:          #F3EFF7;
 
-    --gradient-pulse: linear-gradient(107deg, #6825A2 6.34%, #8552B2 43.93%, #BDB7E9 74.46%);
-
     /* Semantic surfaces */
     --surface-page:           var(--color-paper);
-    --surface-card:           var(--color-paper);
     --text-primary:           var(--color-deep);
     --text-secondary:         var(--color-shadow);
     --text-muted:             rgba(73, 50, 93, 0.6);
-    --rule-line:              rgba(73, 50, 93, 0.2);
 
     --surface-void:           var(--color-deep);
     --surface-deep:           var(--color-deep);
@@ -54,7 +48,6 @@
     --font-subhead:  "Crimson Pro", Georgia, "Times New Roman", serif;
     --font-body:     "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-    --text-xs:    0.75rem;
     --text-sm:    0.875rem;
     --text-base:  1rem;
     --text-md:    1.125rem;
@@ -160,10 +153,6 @@
     transition: background-color var(--dur-reconstitute) var(--ease-calm);
   }
 
-  .embed-root.surface-light {
-    background: var(--surface-page);
-  }
-
   /* Paper grain — barely there. Sits above surface, below content. */
   .paper-grain {
     position: absolute;
@@ -175,15 +164,6 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
     background-size: 240px 240px;
   }
-
-  .surface-light .paper-grain {
-    opacity: 0.05;
-    mix-blend-mode: multiply;
-  }
-
-  /* ============================================================
-     CHROME — thin top strip
-     ============================================================ */
 
   /* ============================================================
      PHASE CONTAINERS
@@ -354,11 +334,6 @@
     font-style: normal;
     color: var(--text-on-dark);
     font-weight: 500;
-  }
-
-  /* Prompt stays present while typing — we no longer hide it on input. */
-  .pour-prompt.dimmed {
-    /* reserved for future muting state if needed */
   }
 
   /* When leaving pour, hide the typing UI but keep the canvas visible
@@ -811,7 +786,7 @@
   <section class="phase mirror" data-phase="mirror" aria-label="mirror">
     <h2 class="mirror-title">Your Tangle:</h2>
     <div class="portrait-stage" id="portraitStage">
-      <img class="tangle-svg" src="public/brand/Tangle.svg" alt="" aria-hidden="true">
+      <img class="tangle-svg" src="public/brand/New Tangle.svg" alt="" aria-hidden="true">
       <div class="portrait-pills" id="portraitPills"></div>
     </div>
     <button class="mirror-restart" type="button" id="mirrorRestart">Begin again</button>
@@ -832,7 +807,6 @@
   let mode = null; // 'own' | 'sample'
 
   let fullText = '';
-  let words = []; // [{ text, startIdx, endIdx }]
   let releasedUpTo = 0;
   let hasStarted = false;
   let isReleasing = false;
@@ -849,13 +823,10 @@
   let lastReleaseTime = 0;
 
   let renderScheduled = false;
-  let pauseTimer = null;
   let doneInviteTimer = null;
   let sampleAbortController = null;
 
-  // Sample text — DRAFT, transcribed approximately from IMG_1759.
-  // Lorin to review wording before final.
-  const SAMPLE_TEXT = "i'm having a confusing day. i thought i did everything right. now my body hurts. i'm trying so hard and i feel in over my head with no clear answers. i get scared i'll always be this way. i'm too sensitive. i should be tougher. i just want to hide.";
+  const SAMPLE_TEXT = "I can't keep up. I'm so behind and I should be further along by now. Everyone else seems fine but I feel like I'm drowning. I know it's not a big deal but I can't stop thinking about it. I'm too much. What's wrong with me.";
 
   // ============================================================
   //  DOM REFS
@@ -939,7 +910,6 @@
     abortSample();
     stopCascadeLoop();
     fullText = '';
-    words = [];
     releasedUpTo = 0;
     charBirths.length = 0;
     lastReleaseTime = 0;
@@ -956,8 +926,6 @@
     siftDone.classList.remove('visible');
     phaseNodes.sift.classList.remove('blackout', 'intro-shown');
     if (portraitPills) portraitPills.innerHTML = '';
-    root.classList.remove('surface-light');
-    if (pauseTimer) clearTimeout(pauseTimer);
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
     renderTypingLine();
     setPhase('entry');
@@ -1278,19 +1246,6 @@
   }
 
   // ============================================================
-  //  TOKENIZE — simple word boundaries, NO charge detection
-  // ============================================================
-  function parseWords(text) {
-    const result = [];
-    const re = /\S+/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      result.push({ text: m[0], startIdx: m.index, endIdx: m.index + m[0].length });
-    }
-    return result;
-  }
-
-  // ============================================================
   //  INPUT HANDLER
   // ============================================================
   hiddenInput.addEventListener('input', onInput);
@@ -1311,7 +1266,6 @@
 
     const previousLen = fullText.length;
     fullText = hiddenInput.value;
-    words = parseWords(fullText);
 
     // Stamp every newly-typed char with its birth time. The cascade tick
     // uses these to release chars on their own schedule, even if typing
@@ -1866,7 +1820,6 @@
     if (phase !== 'pour') return;
     abortSample();
     stopCascadeLoop();
-    if (pauseTimer) clearTimeout(pauseTimer);
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
 
     // Settle any visible (un-released) chars into the heap

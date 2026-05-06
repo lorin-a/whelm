@@ -50,7 +50,7 @@ Three faces, three jobs.
 
 ### Loading
 
-Mackinac Pro is licensed. Host locally at `public/fonts/mackinac/` and declare with `@font-face`. Never load from a third-party CDN — license forbids it.
+Mackinac Pro is licensed. Load via the Adobe Fonts kit (current kit ID: `ryb0aoq`) or self-host at `public/fonts/mackinac/` with a valid license and `@font-face`. Never load from a generic mirror CDN (jsDelivr, Font Library, etc.) — those copies are unlicensed.
 
 Crimson Pro and Noto Sans load from Google Fonts:
 
@@ -108,8 +108,9 @@ Located at `public/brand/`:
 
 - `cursivewhelm.svg` — wordmark
 - `accents.svg` — decorative flourishes
-- `portal.svg` — concentric tunnel ("Overwhelm is a Portal")
-- `tangle_triangle.svg` — overwhelm tangle illustration
+- `Portal.svg` — concentric tunnel ("Overwhelm is a Portal")
+- `Signal.svg` — radiant pulse mark
+- `New Tangle.svg` — overwhelm tangle illustration (used in Mirror portrait)
 - `typologies.svg` — Fog / Flood / Frenzy
 - `self-caremap.svg` — ecosystem diagram
 
