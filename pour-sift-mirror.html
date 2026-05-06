@@ -27,21 +27,21 @@
     --color-shadow:         #49325D;
     --color-amethyst:       #895FAE;
     --color-lavender:       #BDB7E9;
-    --color-lavender-soft:  #BDB7E999;
+    --color-lavender-soft:  #BDB7E9CC;
     --color-haze:           #F0E2FF;
     --color-paper:          #F3EFF7;
 
     --gradient-pulse: linear-gradient(107deg, #6825A2 6.34%, #8552B2 43.93%, #BDB7E9 74.46%);
 
     /* Semantic surfaces */
-    --surface-page:           var(--color-haze);
+    --surface-page:           var(--color-paper);
     --surface-card:           var(--color-paper);
     --text-primary:           var(--color-deep);
     --text-secondary:         var(--color-shadow);
     --text-muted:             rgba(73, 50, 93, 0.6);
     --rule-line:              rgba(73, 50, 93, 0.2);
 
-    --surface-void:           var(--color-void);
+    --surface-void:           var(--color-deep);
     --surface-deep:           var(--color-deep);
     --text-on-dark:           var(--color-haze);
     --text-on-dark-muted:     var(--color-lavender-soft);
@@ -59,9 +59,9 @@
     --text-base:  1rem;
     --text-md:    1.125rem;
     --text-lg:    1.5rem;
-    --text-xl:    2rem;
-    --text-2xl:   2.75rem;
-    --text-3xl:   4rem;
+    --text-xl:    2.25rem;   /* matches brand body — Noto Sans 36px */
+    --text-2xl:   3.25rem;
+    --text-3xl:   5rem;       /* matches brand header proportions — Mackinac 80px */
 
     --leading-tight:  1.15;
     --leading-snug:   1.3;
@@ -79,7 +79,7 @@
     --dur-soft:    420ms;
     --dur-breath:  800ms;
     --dur-settle:  1200ms;
-    --dur-reconstitute: 2400ms;
+    --dur-reconstitute: 1500ms;
 
     /* Layout */
     --space-1: 0.25rem;
@@ -164,69 +164,26 @@
     background: var(--surface-page);
   }
 
+  /* Paper grain — barely there. Sits above surface, below content. */
+  .paper-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+    background-size: 240px 240px;
+  }
+
+  .surface-light .paper-grain {
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+  }
+
   /* ============================================================
      CHROME — thin top strip
      ============================================================ */
-  .chrome {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 30;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-4) var(--space-5);
-    pointer-events: none;
-  }
-
-  .chrome > * {
-    pointer-events: auto;
-  }
-
-  .chrome-title {
-    font-family: var(--font-subhead);
-    font-style: italic;
-    font-size: var(--text-sm);
-    color: var(--text-on-dark-muted);
-    letter-spacing: 0.04em;
-    transition: color var(--dur-reconstitute) var(--ease-calm);
-  }
-
-  .surface-light .chrome-title {
-    color: var(--text-muted);
-  }
-
-  .chrome-reset {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--text-on-dark-muted);
-    padding: var(--space-2) var(--space-3);
-    min-height: var(--touch-min);
-    min-width: var(--touch-min);
-    display: flex;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--dur-soft) var(--ease-glide), color var(--dur-reconstitute) var(--ease-calm);
-  }
-
-  .chrome-reset.visible {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .chrome-reset:hover {
-    color: var(--text-on-dark);
-  }
-
-  .surface-light .chrome-reset {
-    color: var(--text-muted);
-  }
-
-  .surface-light .chrome-reset:hover {
-    color: var(--text-primary);
-  }
 
   /* ============================================================
      PHASE CONTAINERS
@@ -234,13 +191,12 @@
   .phase {
     position: absolute;
     inset: 0;
-    opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity var(--dur-soft) var(--ease-calm);
   }
 
   .phase.active {
-    opacity: 1;
+    visibility: visible;
     pointer-events: auto;
   }
 
@@ -272,8 +228,8 @@
   .entry-tagline {
     font-family: var(--font-subhead);
     font-style: italic;
-    font-size: var(--text-md);
-    color: var(--text-on-dark-muted);
+    font-size: var(--text-lg);
+    color: var(--text-on-dark);
     max-width: 32ch;
     line-height: var(--leading-snug);
     margin-bottom: var(--space-7);
@@ -289,11 +245,12 @@
 
   .entry-btn {
     font-family: var(--font-body);
-    font-size: var(--text-md);
-    font-weight: 500;
+    font-size: var(--text-lg);
+    font-weight: 400;
+    letter-spacing: 0.01em;
     color: var(--text-on-dark);
     background: transparent;
-    border: 1px solid var(--color-lavender-soft);
+    border: 1px solid var(--color-lavender);
     border-radius: var(--radius-md);
     padding: var(--space-4) var(--space-5);
     min-height: var(--touch-min);
@@ -321,7 +278,7 @@
 
   .entry-secondary-note {
     font-family: var(--font-body);
-    font-size: var(--text-xs);
+    font-size: var(--text-base);
     color: var(--text-on-dark-muted);
     margin-top: var(--space-4);
     max-width: 36ch;
@@ -351,23 +308,67 @@
 
   .pour-prompt {
     position: absolute;
-    top: 18%;
+    top: 12%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
     width: 90%;
-    max-width: 460px;
+    max-width: 560px;
     text-align: center;
-    font-family: var(--font-subhead);
-    font-style: italic;
-    font-size: var(--text-md);
-    color: var(--text-on-dark-muted);
     line-height: var(--leading-snug);
-    transition: opacity var(--dur-soft) var(--ease-glide);
   }
 
+  /* Callout container for instructions — bordered card on dark surface */
+  .prompt-card {
+    border: 1px solid color-mix(in srgb, var(--color-lavender) 32%, transparent);
+    border-radius: var(--radius-md);
+    padding: var(--space-5) var(--space-6);
+    background: color-mix(in srgb, var(--color-deep) 60%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-lavender) 8%, transparent),
+                0 12px 40px -16px color-mix(in srgb, var(--color-deep) 70%, transparent);
+  }
+
+  .prompt-lead {
+    display: block;
+    font-family: var(--font-display);
+    font-style: normal;
+    font-size: var(--text-xl);
+    color: var(--text-on-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-3);
+  }
+
+  .prompt-body {
+    display: block;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: var(--text-md);
+    color: var(--text-on-dark-muted);
+    line-height: var(--leading-normal);
+    max-width: 52ch;
+    margin: 0 auto;
+    letter-spacing: 0.01em;
+  }
+
+  .prompt-body em {
+    font-style: normal;
+    color: var(--text-on-dark);
+    font-weight: 500;
+  }
+
+  /* Prompt stays present while typing — we no longer hide it on input. */
   .pour-prompt.dimmed {
-    opacity: 0.4;
+    /* reserved for future muting state if needed */
+  }
+
+  /* When leaving pour, hide the typing UI but keep the canvas visible
+     so falling/reassembling chars stay on stage. Visibility, not opacity —
+     no fades during transitions. */
+  .pour.leaving .pour-prompt,
+  .pour.leaving .typing-area,
+  .pour.leaving .done-invite {
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .typing-area {
@@ -377,43 +378,35 @@
     transform: translate(-50%, -50%);
     z-index: 15;
     width: 92%;
-    max-width: 520px;
+    max-width: 560px;
     text-align: center;
     cursor: text;
   }
 
   .typing-display {
-    font-family: var(--font-body);
-    font-size: var(--text-md);
+    font-family: var(--font-subhead);
+    font-size: var(--text-xl);
     font-weight: 400;
-    line-height: 1.85;
+    line-height: 1.55;
     color: var(--text-on-dark);
     min-height: 30px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    white-space: nowrap;
     position: relative;
     display: inline;
   }
 
   .typing-display .char {
     display: inline;
-    transition: color var(--dur-soft) var(--ease-glide), opacity var(--dur-soft) var(--ease-glide);
-  }
-
-  .typing-display .char.trail {
-    color: var(--text-on-dark-muted);
-    opacity: 0.4;
   }
 
   .placeholder {
     color: var(--text-on-dark-muted);
-    font-family: var(--font-body);
+    font-family: var(--font-subhead);
+    font-style: italic;
     font-weight: 400;
-    font-size: var(--text-md);
+    font-size: var(--text-lg);
     pointer-events: none;
-    transition: opacity var(--dur-soft) var(--ease-glide);
     letter-spacing: 0.01em;
-    opacity: 0.6;
   }
 
   .cursor-blink {
@@ -423,7 +416,7 @@
     background: var(--accent);
     vertical-align: text-bottom;
     margin-left: 2px;
-    animation: blink 1.1s ease infinite;
+    animation: blink 1.1s var(--ease-calm) infinite;
   }
 
   @keyframes blink {
@@ -444,30 +437,31 @@
     pointer-events: none;
   }
 
-  /* Done invite — appears after pause */
+  /* Done invite — appears after a 3s typing pause. Centered just below
+     the typing line. Hides instantly when typing resumes. */
   .done-invite {
     position: absolute;
-    bottom: 12%;
+    top: 58%;
     left: 50%;
-    transform: translateX(-50%);
-    z-index: 18;
-    opacity: 0;
+    transform: translate(-50%, 0);
+    z-index: 25;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity var(--dur-soft) var(--ease-glide);
   }
 
   .done-invite.visible {
-    opacity: 1;
+    visibility: visible;
     pointer-events: auto;
   }
 
   .done-btn {
     font-family: var(--font-body);
-    font-size: var(--text-base);
-    font-weight: 500;
+    font-size: var(--text-md);
+    font-weight: 400;
+    letter-spacing: 0.01em;
     color: var(--text-on-dark);
     background: transparent;
-    border: 1px solid var(--color-lavender-soft);
+    border: 1px solid var(--color-lavender);
     border-radius: var(--radius-pill);
     padding: var(--space-3) var(--space-5);
     min-height: var(--touch-min);
@@ -476,141 +470,262 @@
 
   .done-btn:hover,
   .done-btn:focus-visible {
-    background: rgba(189, 183, 233, 0.1);
-    border-color: var(--color-lavender);
-  }
-
-  /* Sample mode skip affordance — sits below chrome bar */
-  .sample-skip {
-    position: absolute;
-    top: 68px;
-    right: var(--space-5);
-    z-index: 25;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--text-on-dark-muted);
-    padding: var(--space-2) var(--space-3);
-    min-height: var(--touch-min);
-    border-radius: var(--radius-sm);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--dur-soft) var(--ease-glide);
-  }
-
-  .sample-skip.visible {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .sample-skip:hover {
-    color: var(--text-on-dark);
+    background: rgba(189, 183, 233, 0.12);
+    border-color: var(--color-haze);
   }
 
   /* ============================================================
-     RECONSTITUTE — full text fades in, then surface crossfades light
+     SIFT — line-by-line, tap to mark what stays
      ============================================================ */
-  .reconstitute {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-7) var(--space-5);
-  }
-
-  .reconstitute-inner {
-    width: 100%;
-    max-width: 640px;
-    max-height: 70vh;
-    overflow-y: auto;
-    text-align: left;
-  }
-
-  .reconstitute-text {
-    font-family: var(--font-body);
-    font-size: var(--text-md);
-    font-weight: 400;
-    line-height: var(--leading-body);
-    color: var(--text-on-dark);
-    transition: color var(--dur-reconstitute) var(--ease-calm);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-
-  .surface-light .reconstitute-text {
-    color: var(--text-primary);
-  }
-
-  /* Word reveal animation */
-  .reveal-word {
-    display: inline;
-    opacity: 0;
-    transition: opacity var(--dur-breath) var(--ease-calm);
-  }
-
-  .reveal-word.shown {
-    opacity: 1;
-  }
-
-  /* ============================================================
-     SIFT (placeholder for Step 2)
-     ============================================================ */
-  .sift,
-  .mirror {
+  .sift {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: var(--space-7) var(--space-5) var(--space-6);
+    overflow-y: auto;
+  }
+
+  .sift-prompt {
+    text-align: center;
+    max-width: 560px;
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-7);
+    visibility: hidden;
+  }
+
+  .sift.intro-shown .sift-prompt {
+    visibility: visible;
+  }
+
+  .sift-lines {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: 0 auto;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .sift-line {
+    font-family: var(--font-subhead);
+    font-size: var(--text-lg);
+    line-height: 1.85;
+    color: var(--text-on-dark);
+    text-align: left;
+    word-wrap: break-word;
+  }
+
+  /* Letter is laid out (so positions are measurable) but visually hidden
+     until the canvas char arrives. No opacity transition — visibility
+     toggles instantly so the canvas char becomes the DOM letter without a fade. */
+  .sift-letter {
+    display: inline-block;
+    visibility: hidden;
+  }
+
+  .sift-letter.shown {
+    visibility: visible;
+  }
+
+  .sift-word {
+    display: inline;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    padding: 4px 1px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 6px 4px 7px 5px;
+    transition:
+      background-color var(--dur-quick) var(--ease-glide),
+      color var(--dur-quick) var(--ease-glide);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  @media (hover: hover) {
+    .sift-word:hover {
+      background: color-mix(in srgb, var(--color-amethyst) 55%, transparent);
+      color: var(--color-haze);
+    }
+  }
+
+  .sift-word:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .sift-word.marked {
+    background: color-mix(in srgb, var(--color-amethyst) 55%, transparent);
+    color: var(--color-haze);
+  }
+
+  .sift-word.marked + .sift-word.marked {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 5px;
+  }
+
+  .sift-word.marked:has(+ .sift-word.marked) {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 5px;
+  }
+
+  .sift-actions {
+    width: 100%;
+    max-width: 560px;
+    margin: var(--space-7) auto 0;
+    display: flex;
+    justify-content: center;
+    min-height: calc(var(--touch-min) + var(--space-2));
+  }
+
+  .sift-cta {
+    font-family: var(--font-body);
+    font-style: normal;
+    font-weight: 500;
+    font-size: var(--text-md);
+    letter-spacing: 0.02em;
+    color: var(--color-haze);
+    background: var(--color-amethyst);
+    border: 1px solid var(--color-amethyst);
+    border-radius: var(--radius-pill);
+    padding: var(--space-3) var(--space-6);
+    min-height: var(--touch-min);
+    visibility: hidden;
+    pointer-events: none;
+    transition: background-color var(--dur-quick) var(--ease-glide), border-color var(--dur-quick) var(--ease-glide);
+  }
+
+  .sift-cta.visible {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) {
+    .sift-cta:hover {
+      background: color-mix(in srgb, var(--color-amethyst) 80%, white);
+      border-color: var(--color-haze);
+    }
+  }
+
+  .sift-cta:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Blackout — unmarked words shift color to the surface so they
+     literally fade into the page. Color motion, not opacity. */
+  .sift.blackout .sift-word:not(.marked) {
+    color: var(--color-deep);
+    transition: color var(--dur-settle) var(--ease-calm);
+  }
+
+  .sift.blackout .sift-prompt,
+  .sift.blackout .sift-cta {
+    visibility: hidden;
+  }
+
+  /* ============================================================
+     MIRROR — pills around a centered tangle illustration
+     ============================================================ */
+  .mirror {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     text-align: center;
     padding: var(--space-7) var(--space-5);
+    gap: var(--space-6);
   }
 
-  .stub-title {
+  .mirror-title {
     font-family: var(--font-display);
+    font-weight: 400;
     font-size: var(--text-xl);
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: var(--space-4);
+    color: var(--text-on-dark);
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+    text-align: center;
+    margin: 0;
   }
 
-  .stub-body {
-    font-family: var(--font-subhead);
-    font-style: italic;
+  .portrait-stage {
+    position: relative;
+    width: 100%;
+    max-width: 880px;
+    aspect-ratio: 16 / 10;
+    margin: 0 auto;
+  }
+
+  .tangle-svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 56%;
+    max-width: 520px;
+    transform: translate(-50%, -50%);
+    opacity: 0.85;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .portrait-pills {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .portrait-pill {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3) var(--space-5);
+    border: 2px solid var(--text-on-dark);
+    border-radius: 44px;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 1.375rem;       /* 22px — matches Figma spec */
+    color: var(--text-on-dark);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--color-deep) 70%, transparent);
+    min-height: 56px;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+  }
+
+  .mirror-restart {
+    font-family: var(--font-body);
+    font-weight: 500;
     font-size: var(--text-md);
-    color: var(--text-secondary);
-    max-width: 38ch;
-    line-height: var(--leading-body);
-    margin-bottom: var(--space-6);
-  }
-
-  .stub-text-preview {
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    color: var(--text-primary);
-    line-height: var(--leading-body);
-    max-width: 540px;
-    padding: var(--space-5);
-    background: var(--surface-card);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--rule-line);
-    margin-bottom: var(--space-5);
-    text-align: left;
-    white-space: pre-wrap;
-  }
-
-  .stub-cta {
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    font-weight: 500;
-    color: white;
-    background: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-md);
+    letter-spacing: 0.01em;
+    color: var(--color-haze);
+    background: transparent;
+    border: 1px solid var(--color-lavender);
+    border-radius: var(--radius-pill);
     padding: var(--space-3) var(--space-5);
     min-height: var(--touch-min);
-    transition: background-color var(--dur-quick) var(--ease-glide);
+    transition: background-color var(--dur-quick) var(--ease-glide), border-color var(--dur-quick) var(--ease-glide);
   }
 
-  .stub-cta:hover, .stub-cta:focus-visible {
-    background: color-mix(in srgb, var(--accent) 85%, white);
+  @media (hover: hover) {
+    .mirror-restart:hover {
+      background: rgba(189, 183, 233, 0.12);
+      border-color: var(--color-haze);
+    }
+  }
+
+  .mirror-restart:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   /* ============================================================
@@ -619,7 +734,7 @@
   @media (max-width: 480px) {
     .entry-mark { font-size: var(--text-xl); }
     .typing-display { font-size: var(--text-base); }
-    .reconstitute-text { font-size: var(--text-base); }
+    .sift-line { font-size: var(--text-base); }
   }
 </style>
 </head>
@@ -627,29 +742,26 @@
 
 <div class="embed-root" id="embedRoot">
 
-  <header class="chrome">
-    <span class="chrome-title" id="chromeTitle">whelm — pour</span>
-    <button class="chrome-reset" id="chromeReset" type="button" aria-label="start over">start over</button>
-  </header>
+  <div class="paper-grain" aria-hidden="true"></div>
 
   <!-- ============================================================
        PHASE: ENTRY
        ============================================================ -->
   <section class="phase entry active" data-phase="entry" aria-label="entry">
     <h1 class="entry-mark">whelm<span class="dot">.</span></h1>
-    <p class="entry-tagline">a companion for coming back to yourself</p>
+    <p class="entry-tagline">A companion for coming back to yourself.</p>
 
     <div class="entry-actions">
       <button class="entry-btn entry-btn-primary" id="btnPourOwn" type="button">
-        pour your own
+        Pour your own
       </button>
       <button class="entry-btn" id="btnPourSample" type="button">
-        watch a sample
+        Watch a sample
       </button>
     </div>
 
     <p class="entry-secondary-note">
-      your words stay on this page. nothing is saved or sent.
+      Your words stay on this page. Nothing is saved or sent.
     </p>
   </section>
 
@@ -660,56 +772,49 @@
     <div class="void-canvas" id="voidCanvas">
       <canvas class="rain-canvas" id="rainCanvas" aria-hidden="true"></canvas>
 
-      <div class="pour-prompt" id="pourPrompt">
-        let it pour out. unfiltered. the words will fall.
+      <div class="pour-prompt prompt-card" id="pourPrompt">
+        <span class="prompt-lead">Pour It Out.</span>
+        <span class="prompt-body">Type whatever's on your mind. Stream of consciousness — don't filter or edit. Words will fall away as you write.</span>
       </div>
 
       <div class="typing-area" id="typingArea">
         <div class="typing-display" id="typingDisplay">
-          <span class="placeholder" id="placeholder">begin typing…</span><span class="cursor-blink" id="cursor" aria-hidden="true"></span>
+          <span class="placeholder" id="placeholder">Begin typing…</span><span class="cursor-blink" id="cursor" aria-hidden="true"></span>
         </div>
       </div>
 
       <input type="text" class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="pour your thoughts">
 
-      <button class="sample-skip" id="sampleSkip" type="button" aria-label="skip sample">skip ›</button>
-
       <div class="done-invite" id="doneInvite">
-        <button class="done-btn" id="btnDone" type="button">i'm done</button>
+        <button class="done-btn" id="btnDone" type="button">I'm done</button>
       </div>
     </div>
   </section>
 
   <!-- ============================================================
-       PHASE: RECONSTITUTE
-       ============================================================ -->
-  <section class="phase reconstitute" data-phase="reconstitute" aria-label="reconstitute" aria-live="polite">
-    <div class="reconstitute-inner">
-      <div class="reconstitute-text" id="reconstituteText"></div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       PHASE: SIFT (stub)
+       PHASE: SIFT
        ============================================================ -->
   <section class="phase sift" data-phase="sift" aria-label="sift">
-    <h2 class="stub-title">sift + blackout</h2>
-    <p class="stub-body">
-      coming next — read slowly, underline what lands in your body, watch the rest fall to black.
-    </p>
-    <div class="stub-text-preview" id="stubTextPreview"></div>
-    <button class="stub-cta" id="btnRestart" type="button">start over</button>
+    <div class="sift-prompt prompt-card" id="siftPrompt">
+      <span class="prompt-lead">Read It Back.</span>
+      <span class="prompt-body">Read slowly. Notice which words land in your body — a held breath, a tightened throat, a tear, a pull in your chest. <em>Tap or drag</em> across those words to mark what carries weight. Not sure where to start? Look at the adjectives and descriptive phrases — they often reveal a deeper pattern.</span>
+    </div>
+    <div class="sift-lines" id="siftLines" aria-live="polite"></div>
+    <div class="sift-actions">
+      <button class="sift-cta" id="siftDone" type="button">Carry these forward</button>
+    </div>
   </section>
 
   <!-- ============================================================
        PHASE: MIRROR (stub)
        ============================================================ -->
   <section class="phase mirror" data-phase="mirror" aria-label="mirror">
-    <h2 class="stub-title">mirror</h2>
-    <p class="stub-body">
-      coming next — your selected words become a portrait you can shape and keep.
-    </p>
-    <button class="stub-cta" type="button" onclick="window.location.reload()">start over</button>
+    <h2 class="mirror-title">Your Tangle:</h2>
+    <div class="portrait-stage" id="portraitStage">
+      <img class="tangle-svg" src="public/brand/Tangle.svg" alt="" aria-hidden="true">
+      <div class="portrait-pills" id="portraitPills"></div>
+    </div>
+    <button class="mirror-restart" type="button" id="mirrorRestart">Begin again</button>
   </section>
 
 </div>
@@ -722,7 +827,7 @@
   // ============================================================
   //  STATE
   // ============================================================
-  const PHASES = ['entry', 'pour', 'reconstitute', 'sift', 'mirror'];
+  const PHASES = ['entry', 'pour', 'sift', 'mirror'];
   let phase = 'entry';
   let mode = null; // 'own' | 'sample'
 
@@ -732,10 +837,18 @@
   let hasStarted = false;
   let isReleasing = false;
 
-  const TRAIL_DISTANCE = 4; // word lookback before trailing
+  // Time-based cascade. Each typed char gets a birth timestamp; once its
+  // age exceeds CHAR_LIFESPAN the char falls — independent of typing rhythm.
+  // Width is a safety net: if the line overflows the container (e.g. paste),
+  // chars also release until it fits. Letters cascade in the order they
+  // were written, even when the user has stopped typing.
+  const CHAR_LIFESPAN = 5000;       // ms a char lives in the line before falling
+  const MIN_RELEASE_INTERVAL = 180; // ms — throttle so chars cascade smoothly, never in bursts
+  const charBirths = [];        // index = global char index in fullText, value = perf.now() at type
+  let cascadeIntervalId = null;
+  let lastReleaseTime = 0;
 
   let renderScheduled = false;
-  let releaseScheduled = false;
   let pauseTimer = null;
   let doneInviteTimer = null;
   let sampleAbortController = null;
@@ -748,8 +861,6 @@
   //  DOM REFS
   // ============================================================
   const root            = document.getElementById('embedRoot');
-  const chromeTitle     = document.getElementById('chromeTitle');
-  const chromeReset     = document.getElementById('chromeReset');
   const btnPourOwn      = document.getElementById('btnPourOwn');
   const btnPourSample   = document.getElementById('btnPourSample');
   const voidCanvas      = document.getElementById('voidCanvas');
@@ -763,10 +874,11 @@
   const hiddenInput     = document.getElementById('hiddenInput');
   const doneInvite      = document.getElementById('doneInvite');
   const btnDone         = document.getElementById('btnDone');
-  const sampleSkip      = document.getElementById('sampleSkip');
-  const reconstituteText= document.getElementById('reconstituteText');
-  const stubTextPreview = document.getElementById('stubTextPreview');
-  const btnRestart      = document.getElementById('btnRestart');
+  const siftPrompt      = document.getElementById('siftPrompt');
+  const siftLines       = document.getElementById('siftLines');
+  const siftDone        = document.getElementById('siftDone');
+
+  let siftSelections = new Set();
 
   const phaseNodes = {};
   document.querySelectorAll('.phase').forEach(el => {
@@ -782,38 +894,28 @@
     phase = next;
 
     PHASES.forEach(p => {
+      // Pour stays active during the reassembly into sift; buildSift drops it
+      // explicitly once the chars have arrived. Otherwise standard toggle.
+      if (p === 'pour' && prev === 'pour' && next === 'sift') return;
       phaseNodes[p].classList.toggle('active', p === next);
     });
 
-    updateChrome();
     onPhaseEnter(next, prev);
-  }
-
-  function updateChrome() {
-    const titles = {
-      entry:        'whelm',
-      pour:         'whelm — pour',
-      reconstitute: 'whelm — pause',
-      sift:         'whelm — sift',
-      mirror:       'whelm — mirror',
-    };
-    chromeTitle.textContent = titles[phase];
-    chromeReset.classList.toggle('visible', phase !== 'entry');
   }
 
   function onPhaseEnter(next, prev) {
     if (next === 'pour') {
       resizeRainCanvas();
+      startCascadeLoop();
       // Defer focus until phase fade-in completes (avoid mobile keyboard flash)
       setTimeout(() => {
         if (phase === 'pour' && mode === 'own') hiddenInput.focus();
       }, 400);
-    }
-    if (next === 'reconstitute') {
-      runReconstitution();
+    } else {
+      stopCascadeLoop();
     }
     if (next === 'sift') {
-      stubTextPreview.textContent = fullText;
+      buildSift();
     }
   }
 
@@ -828,33 +930,314 @@
   btnPourSample.addEventListener('click', () => {
     mode = 'sample';
     setPhase('pour');
-    sampleSkip.classList.add('visible');
-    setTimeout(() => startSample(), 700);
+    setTimeout(() => startSample(), 3500);
   });
 
-  chromeReset.addEventListener('click', resetAll);
-  btnRestart && btnRestart.addEventListener('click', resetAll);
+  siftDone.addEventListener('click', runBlackout);
 
   function resetAll() {
     abortSample();
+    stopCascadeLoop();
     fullText = '';
     words = [];
     releasedUpTo = 0;
+    charBirths.length = 0;
+    lastReleaseTime = 0;
     hasStarted = false;
     isReleasing = false;
     hiddenInput.value = '';
-    rainParticles.length = 0;
-    rainAlive = 0;
+    clearCanvasState();
     pourPrompt.classList.remove('dimmed');
     placeholder.style.opacity = '';
     doneInvite.classList.remove('visible');
-    sampleSkip.classList.remove('visible');
-    reconstituteText.innerHTML = '';
+    phaseNodes.pour.classList.remove('leaving');
+    siftLines.innerHTML = '';
+    siftSelections = new Set();
+    siftDone.classList.remove('visible');
+    phaseNodes.sift.classList.remove('blackout', 'intro-shown');
+    if (portraitPills) portraitPills.innerHTML = '';
     root.classList.remove('surface-light');
     if (pauseTimer) clearTimeout(pauseTimer);
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
     renderTypingLine();
     setPhase('entry');
+  }
+
+  // ============================================================
+  //  SIFT — line-by-line, tap to mark
+  // ============================================================
+  function buildSift() {
+    siftLines.innerHTML = '';
+    siftSelections = new Set();
+    siftDone.classList.remove('visible');
+    phaseNodes.sift.classList.remove('blackout', 'intro-shown');
+
+    const text = fullText.trim();
+    if (!text) return;
+
+    // Find each line's start index in fullText so each letter span keeps its srcIdx.
+    const matches = text.match(/[^.!?\n]+[.!?]*\s*/g) || [text];
+    const lines = matches.map(s => s.trim()).filter(Boolean);
+
+    let wordCounter = 0;
+    let scanFrom = 0;
+    const allLetterSpans = [];
+
+    lines.forEach(lineText => {
+      const lineStart = fullText.indexOf(lineText, scanFrom);
+      const baseIdx = lineStart === -1 ? scanFrom : lineStart;
+      scanFrom = baseIdx + lineText.length;
+
+      const lineEl = document.createElement('p');
+      lineEl.className = 'sift-line';
+
+      let cursor = baseIdx;
+      const tokens = lineText.split(/(\s+)/);
+      tokens.forEach(tok => {
+        if (!tok) return;
+        if (/^\s+$/.test(tok)) {
+          lineEl.appendChild(document.createTextNode(' '));
+          cursor += tok.length;
+          return;
+        }
+        const idx = wordCounter++;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sift-word';
+        btn.dataset.idx = String(idx);
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', tok);
+
+        for (let j = 0; j < tok.length; j++) {
+          const span = document.createElement('span');
+          span.className = 'sift-letter';
+          span.textContent = tok[j];
+          span.dataset.srcIdx = String(cursor + j);
+          btn.appendChild(span);
+          allLetterSpans.push(span);
+        }
+        cursor += tok.length;
+        lineEl.appendChild(btn);
+      });
+
+      siftLines.appendChild(lineEl);
+    });
+
+    // Reassembly path: chars rise from the heap to each letter's position.
+    const useReassembly = !prefersReducedMotion.matches && heapChars.length > 0;
+
+    if (!useReassembly) {
+      // No motion path: snap letters visible. Surface stays dark for sift.
+      allLetterSpans.forEach(span => span.classList.add('shown'));
+      phaseNodes.pour.classList.remove('active');
+      phaseNodes.sift.classList.add('intro-shown');
+      return;
+    }
+
+    // Measure typing-line and sift-letter sizes so canvas chars shrink as
+    // they fly — landing exactly the size of the DOM letter.
+    const typingFontPx = parseFloat(getComputedStyle(typingDisplay).fontSize) || 32;
+    const probeLetter = allLetterSpans[0];
+    const siftFontPx = probeLetter ? (parseFloat(getComputedStyle(probeLetter).fontSize) || 24) : 24;
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const canvasRect = rainCanvas.getBoundingClientRect();
+      const targets = allLetterSpans.map(span => {
+        const r = span.getBoundingClientRect();
+        return {
+          srcIdx: parseInt(span.dataset.srcIdx, 10),
+          x: r.left - canvasRect.left + r.width / 2,
+          y: r.top - canvasRect.top + r.height / 2,
+          el: span,
+          char: span.textContent,
+        };
+      });
+      startReassembly(targets, typingFontPx, siftFontPx);
+    }));
+
+    // Once chars have arrived, drop pour and reveal sift prompt + CTA.
+    // Surface stays dark — sift takes place on the same warm night.
+    setTimeout(() => {
+      phaseNodes.pour.classList.remove('active');
+    }, 2400);
+    setTimeout(() => {
+      phaseNodes.sift.classList.add('intro-shown');
+    }, 2700);
+  }
+
+  function toggleSiftWord(idx, btn) {
+    if (phaseNodes.sift.classList.contains('blackout')) return;
+    if (siftSelections.has(idx)) {
+      siftSelections.delete(idx);
+      btn.classList.remove('marked');
+      btn.setAttribute('aria-pressed', 'false');
+    } else {
+      siftSelections.add(idx);
+      btn.classList.add('marked');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+    siftDone.classList.toggle('visible', siftSelections.size > 0);
+  }
+
+  // Tap-or-drag to mark words. A short tap toggles the word under the
+  // pointer; a drag toggles every word the pointer crosses (each word
+  // toggles at most once per drag so passing back over doesn't undo it).
+  let siftDragActive = false;
+  let siftDragMoved = false;
+  let siftDragSeen = new Set();
+  let siftDragPointerId = null;
+
+  function siftWordFromEvent(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    return el && el.closest ? el.closest('.sift-word') : null;
+  }
+
+  siftLines.addEventListener('pointerdown', (e) => {
+    if (phaseNodes.sift.classList.contains('blackout')) return;
+    const word = siftWordFromEvent(e);
+    if (!word) return;
+    e.preventDefault();
+    siftDragActive = true;
+    siftDragMoved = false;
+    siftDragPointerId = e.pointerId;
+    siftDragSeen = new Set();
+    try { siftLines.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+
+  siftLines.addEventListener('pointermove', (e) => {
+    if (!siftDragActive || e.pointerId !== siftDragPointerId) return;
+    const word = siftWordFromEvent(e);
+    if (!word || siftDragSeen.has(word)) return;
+    siftDragSeen.add(word);
+    siftDragMoved = true;
+    toggleSiftWord(parseInt(word.dataset.idx, 10), word);
+  });
+
+  function endSiftDrag(e) {
+    if (!siftDragActive || e.pointerId !== siftDragPointerId) return;
+    if (!siftDragMoved) {
+      // Single tap — toggle the word under the pointer.
+      const word = siftWordFromEvent(e);
+      if (word) toggleSiftWord(parseInt(word.dataset.idx, 10), word);
+    }
+    siftDragActive = false;
+    siftDragMoved = false;
+    siftDragSeen = new Set();
+    try { siftLines.releasePointerCapture(siftDragPointerId); } catch (_) {}
+    siftDragPointerId = null;
+  }
+
+  siftLines.addEventListener('pointerup', endSiftDrag);
+  siftLines.addEventListener('pointercancel', endSiftDrag);
+
+  function runBlackout() {
+    if (phase !== 'sift') return;
+
+    // Capture marked word DOM rects BEFORE the unmarked words fade away —
+    // so the portrait pills can FLIP-animate from these starting positions
+    // into the mirror layout.
+    const sortedIds = [...siftSelections].sort((a, b) => a - b);
+    const phrases = [];
+    let current = null;
+    sortedIds.forEach(id => {
+      const btn = siftLines.querySelector(`.sift-word[data-idx="${id}"]`);
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const text = btn.textContent;
+      if (current && id === current.lastIdx + 1) {
+        current.parts.push({ text, rect });
+        current.lastIdx = id;
+      } else {
+        current = { parts: [{ text, rect }], lastIdx: id };
+        phrases.push(current);
+      }
+    });
+    // Combine consecutive marks into a single phrase pill, with a union rect.
+    phrases.forEach(p => {
+      p.text = p.parts.map(part => part.text).join(' ');
+      const minLeft = Math.min(...p.parts.map(part => part.rect.left));
+      const maxRight = Math.max(...p.parts.map(part => part.rect.right));
+      const minTop = Math.min(...p.parts.map(part => part.rect.top));
+      const maxBottom = Math.max(...p.parts.map(part => part.rect.bottom));
+      p.startCenterX = (minLeft + maxRight) / 2;
+      p.startCenterY = (minTop + maxBottom) / 2;
+    });
+
+    phaseNodes.sift.classList.add('blackout');
+    const delay = prefersReducedMotion.matches ? 200 : 1600;
+    setTimeout(() => {
+      setPhase('mirror');
+      buildPortrait(phrases);
+    }, delay);
+  }
+
+  // ============================================================
+  //  PORTRAIT — build pills from selected phrases, position
+  //  them around the central tangle, and FLIP-animate from the
+  //  marks' original sift positions into the new layout.
+  // ============================================================
+  const portraitStage = document.getElementById('portraitStage');
+  const portraitPills = document.getElementById('portraitPills');
+  const mirrorRestart = document.getElementById('mirrorRestart');
+  if (mirrorRestart) mirrorRestart.addEventListener('click', resetAll);
+
+  function buildPortrait(phrases) {
+    portraitPills.innerHTML = '';
+    if (!phrases || phrases.length === 0) return;
+
+    const stageRect = portraitStage.getBoundingClientRect();
+    const cx = stageRect.width / 2;
+    const cy = stageRect.height / 2;
+    const rx = stageRect.width * 0.36;
+    const ry = stageRect.height * 0.34;
+    const N = phrases.length;
+    const angleOffset = -Math.PI / 2; // start at top
+
+    phrases.forEach((p, i) => {
+      const pill = document.createElement('span');
+      pill.className = 'portrait-pill';
+      pill.textContent = p.text;
+      portraitPills.appendChild(pill);
+
+      // Distribute around an ellipse with a small organic jitter so
+      // pills don't sit on a perfectly-mechanical orbit.
+      const baseAngle = angleOffset + (i / N) * Math.PI * 2;
+      const jitterAngle = (Math.random() - 0.5) * (Math.PI / N) * 0.4;
+      const jitterR = 0.92 + Math.random() * 0.16;
+      const angle = baseAngle + jitterAngle;
+      const targetX = cx + Math.cos(angle) * rx * jitterR;
+      const targetY = cy + Math.sin(angle) * ry * jitterR;
+
+      pill.style.left = targetX + 'px';
+      pill.style.top = targetY + 'px';
+      p.pill = pill;
+      p.targetX = targetX;
+      p.targetY = targetY;
+    });
+
+    if (prefersReducedMotion.matches) return; // already at final positions
+
+    // FLIP: read final positions, set initial transforms to start at the
+    // sift-word locations, then transition back to translate(-50%, -50%).
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const stageRectNow = portraitStage.getBoundingClientRect();
+      phrases.forEach(p => {
+        const pillRect = p.pill.getBoundingClientRect();
+        const pillCenterX = pillRect.left + pillRect.width / 2;
+        const pillCenterY = pillRect.top + pillRect.height / 2;
+        const dx = p.startCenterX - pillCenterX;
+        const dy = p.startCenterY - pillCenterY;
+        p.pill.style.transition = 'none';
+        p.pill.style.transform =
+          `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      });
+      portraitPills.offsetHeight; // force reflow
+      phrases.forEach(p => {
+        p.pill.style.transition =
+          'transform var(--dur-settle) var(--ease-calm)';
+        p.pill.style.transform = 'translate(-50%, -50%)';
+      });
+    }));
   }
 
   // ============================================================
@@ -866,9 +1249,9 @@
     const ctrl = sampleAbortController;
 
     // Focus is not needed for sample — we drive value directly
-    const baseDelay = 70;
-    const variance = 50;
-    const punctPause = 320;
+    const baseDelay = 180;
+    const variance = 80;
+    const punctPause = 500;
 
     for (let i = 0; i < SAMPLE_TEXT.length; i++) {
       if (ctrl.aborted) return;
@@ -889,16 +1272,6 @@
     if (sampleAbortController) sampleAbortController.aborted = true;
     sampleAbortController = null;
   }
-
-  sampleSkip.addEventListener('click', () => {
-    abortSample();
-    // Fast-forward: fill rest of sample text
-    if (mode === 'sample' && hiddenInput.value.length < SAMPLE_TEXT.length) {
-      hiddenInput.value = SAMPLE_TEXT;
-      onInput();
-    }
-    finishPour();
-  });
 
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -936,26 +1309,38 @@
   function onInput() {
     if (phase !== 'pour') return;
 
+    const previousLen = fullText.length;
     fullText = hiddenInput.value;
     words = parseWords(fullText);
 
+    // Stamp every newly-typed char with its birth time. The cascade tick
+    // uses these to release chars on their own schedule, even if typing
+    // pauses entirely.
+    const now = performance.now();
+    for (let i = previousLen; i < fullText.length; i++) {
+      charBirths[i] = now;
+    }
+    if (fullText.length < previousLen) {
+      // Backspace — drop births for removed chars.
+      charBirths.length = fullText.length;
+    }
+
     if (!hasStarted && fullText.length > 0) {
       hasStarted = true;
-      pourPrompt.classList.add('dimmed');
       placeholder.style.opacity = '0';
+      // Prompt stays visible while typing — user can keep referring back to instructions.
     }
 
     scheduleRender();
-    scheduleRelease();
 
-    // Done invite logic — show after pause when there's substantive text
+    // Done invite logic — hide on every keystroke, show after a 3s pause
+    // when there's substantive text. Always hides while typing.
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
+    hideDoneInvite();
     if (fullText.trim().length > 12) {
       doneInviteTimer = setTimeout(() => {
         if (phase === 'pour') showDoneInvite();
-      }, mode === 'sample' ? 1200 : 4000);
-    } else {
-      hideDoneInvite();
+      }, mode === 'sample' ? 1200 : 3000);
     }
   }
 
@@ -968,15 +1353,18 @@
     });
   }
 
-  function scheduleRelease() {
-    if (releaseScheduled) return;
-    releaseScheduled = true;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        releaseScheduled = false;
-        releaseTrailing();
-      });
-    });
+  // Cascade loop runs continuously while in pour, regardless of typing.
+  // Each tick checks the oldest visible char: if its age has passed
+  // CHAR_LIFESPAN, or the line overflows the container, release it.
+  function startCascadeLoop() {
+    if (cascadeIntervalId !== null) return;
+    cascadeIntervalId = setInterval(runCascade, 90);
+  }
+  function stopCascadeLoop() {
+    if (cascadeIntervalId !== null) {
+      clearInterval(cascadeIntervalId);
+      cascadeIntervalId = null;
+    }
   }
 
   // ============================================================
@@ -1000,19 +1388,10 @@
 
     const visText = fullText.slice(releasedUpTo);
 
-    // Compute trail boundary (in chars)
-    let trailCharIdx = 0;
-    const trailWordIdx = words.length - TRAIL_DISTANCE;
-    if (trailWordIdx >= 0 && trailWordIdx < words.length) {
-      trailCharIdx = words[trailWordIdx].startIdx;
-    }
-
     const frag = document.createDocumentFragment();
     for (let i = 0; i < visText.length; i++) {
-      const gIdx = releasedUpTo + i;
-      const isTrail = gIdx < trailCharIdx;
       const span = document.createElement('span');
-      span.className = isTrail ? 'char trail' : 'char';
+      span.className = 'char';
       span.textContent = visText[i];
       frag.appendChild(span);
     }
@@ -1021,34 +1400,67 @@
   }
 
   // ============================================================
-  //  RELEASE TRAILING — chars beyond trail boundary become rain
+  //  CASCADE — time-based per-char, with width safety net
+  //  Each char has a birth timestamp from when it was typed. On every
+  //  tick (~90ms), we walk chars from oldest to newest. A char releases
+  //  when EITHER its age has passed CHAR_LIFESPAN, OR the line still
+  //  overflows the container width. The age path drives continuous
+  //  cascade (line drains even when typing stops); the width path
+  //  catches paste/burst overflow before the line can grow grotesque.
   // ============================================================
-  function releaseTrailing() {
+  function runCascade() {
     if (isReleasing) return;
     if (phase !== 'pour') return;
 
-    const trailWordIdx = words.length - TRAIL_DISTANCE;
-    if (trailWordIdx < 0) return;
+    const chars = Array.from(typingDisplay.querySelectorAll('.char'));
+    if (chars.length === 0) return;
 
-    const targetCharPos = words[trailWordIdx].startIdx;
-    if (targetCharPos <= releasedUpTo) return;
+    const now = performance.now();
+    const containerWidth = typingArea.getBoundingClientRect().width;
+    let remainingWidth = typingDisplay.getBoundingClientRect().width;
+    const ageThrottled = now - lastReleaseTime < MIN_RELEASE_INTERVAL;
+
+    // Width-based release fires unconditionally (catches paste/burst overflow).
+    // Age-based release respects MIN_RELEASE_INTERVAL so chars cascade in a
+    // smooth stream — one at a time — even if many become aged at the same tick.
+    let releaseCount = 0;
+    let firedAge = false;
+    for (let i = 0; i < chars.length; i++) {
+      const c = chars[i];
+      const idx = releasedUpTo + i;
+      const birth = charBirths[idx];
+      const ageOld = birth !== undefined && (now - birth) >= CHAR_LIFESPAN;
+      const overflowing = remainingWidth > containerWidth;
+      if (overflowing) {
+        // always release to fix overflow
+      } else if (ageOld && !ageThrottled && !firedAge) {
+        firedAge = true; // only one age-based release per tick
+      } else {
+        break;
+      }
+      remainingWidth -= c.getBoundingClientRect().width;
+      releaseCount++;
+    }
+    if (releaseCount === 0) return;
+    lastReleaseTime = now;
 
     isReleasing = true;
     try {
       const canvasRect = voidCanvas.getBoundingClientRect();
-      const trailChars = typingDisplay.querySelectorAll('.char.trail');
       const charData = [];
-      trailChars.forEach(c => {
+      for (let i = 0; i < releaseCount; i++) {
+        const c = chars[i];
         const r = c.getBoundingClientRect();
         charData.push({
           char: c.textContent,
           x: r.left - canvasRect.left + r.width / 2,
           y: r.top - canvasRect.top + r.height / 2,
         });
-      });
+      }
 
-      releasedUpTo = targetCharPos;
-      spawnRain(charData);
+      const baseIdx = releasedUpTo;
+      releasedUpTo += releaseCount;
+      spawnRain(charData, baseIdx);
       renderTypingLine();
     } finally {
       isReleasing = false;
@@ -1056,13 +1468,19 @@
   }
 
   // ============================================================
-  //  RAIN — Canvas particle system (ported from v9, parser-free)
+  //  RAIN + HEAP — paper-page char physics with swarm reassembly.
+  //  Falling chars follow curved currents; on settle they join a
+  //  concentrated heap. On sift entry, heap chars rise along curved
+  //  paths to their reading positions in the sift layout.
   // ============================================================
-  let rainParticles = [];
-  let rainAlive = 0;
+  let fallingChars = [];   // in flight: { char, srcIdx, x0, y0, settleX, settleY, settleRot, freq, amp, phase, delay, duration, startTime, dead }
+  let heapChars = [];      // settled: { char, srcIdx, x, y, rot, alpha }
+  let reassemblyChars = []; // rising to DOM targets: { char, x0, y0, rot0, x1, y1, dur, delay, startTime, domEl, revealed, done }
+  let canvasMode = 'pour';  // 'pour' | 'reassemble' | 'idle'
   let rainLoopRunning = false;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let rainColor = '#F0E2FF';
+  let inkColor = '#F0E2FF';
+  let canvasFont = '400 36px "Crimson Pro", Georgia, serif';
 
   function resizeRainCanvas() {
     const rect = voidCanvas.getBoundingClientRect();
@@ -1072,47 +1490,157 @@
     rainCanvas.style.width = rect.width + 'px';
     rainCanvas.style.height = rect.height + 'px';
     rainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Match typing display font for visual coherence
     const cs = getComputedStyle(typingDisplay);
-    rainCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    canvasFont = `400 ${cs.fontSize} "Crimson Pro", Georgia, serif`;
+    rainCtx.font = canvasFont;
     rainCtx.textAlign = 'center';
     rainCtx.textBaseline = 'middle';
-    // Pull text-on-dark token at runtime for accuracy
-    rainColor = getComputedStyle(document.documentElement).getPropertyValue('--text-on-dark').trim() || '#F0E2FF';
+    inkColor = getComputedStyle(document.documentElement).getPropertyValue('--color-haze').trim() || '#F0E2FF';
+    // Re-render heap immediately if loop is idle
+    if (!rainLoopRunning && (heapChars.length > 0 || reassemblyChars.length > 0)) {
+      requestAnimationFrame(animateRain);
+    }
   }
   window.addEventListener('resize', resizeRainCanvas);
 
-  function spawnRain(charData) {
-    if (prefersReducedMotion.matches) return;
+  function pickLandingSpot() {
+    // Collision-based pile with sand-like gravity. Char picks an x,
+    // then rolls to a nearby lower position if the local pile is too steep.
+    // Band widens as the pile grows so chars naturally spread into a mound.
+    const cw = voidCanvas.offsetWidth;
+    const ch = voidCanvas.offsetHeight;
+    const charSize = 28;
+    const collideR = charSize * 0.5;
+    const baseLine = ch - 18;
+    const minY = ch * 0.5; // keep clear of typing area
 
-    const canvasH = voidCanvas.offsetHeight;
-    let delayIdx = 0;
+    // Compute landing y at any x by neighbor collision.
+    const computeY = (x) => {
+      let y = baseLine;
+      for (let i = 0; i < heapChars.length; i++) {
+        const h = heapChars[i];
+        const dx = h.x - x;
+        if (Math.abs(dx) < collideR) {
+          const restAbove = h.y - charSize * 0.62;
+          if (restAbove < y) y = restAbove;
+        }
+      }
+      return y;
+    };
 
+    // Initial pick: gaussian around center with band widening as pile grows.
+    const center = cw / 2;
+    const fillFactor = Math.min(1, heapChars.length / 90);
+    const bandHalf = Math.min(cw * 0.40, 280) * (0.35 + 0.65 * fillFactor);
+    const gauss = (Math.random() + Math.random() + Math.random() - 1.5) * 0.7;
+    let targetX = center + gauss * bandHalf;
+    let landingY = computeY(targetX);
+
+    // Sand-pile gravity: if neighbor positions are meaningfully lower
+    // (higher y), the char rolls to the lower side. Cap iterations.
+    const slopeBias = charSize * 0.55;
+    const rollStep = charSize * 0.65;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const leftX = targetX - rollStep;
+      const rightX = targetX + rollStep;
+      const leftY = computeY(leftX);
+      const rightY = computeY(rightX);
+      let nextX = targetX;
+      let nextY = landingY;
+      if (leftY > landingY + slopeBias && leftY >= rightY) {
+        nextX = leftX; nextY = leftY;
+      } else if (rightY > landingY + slopeBias) {
+        nextX = rightX; nextY = rightY;
+      }
+      if (nextX === targetX) break;
+      targetX = nextX;
+      landingY = nextY;
+    }
+
+    // Slight horizontal jitter so chars don't perfectly stack
+    targetX += (Math.random() - 0.5) * (charSize * 0.18);
+    if (landingY < minY) landingY = minY;
+
+    return {
+      x: targetX,
+      y: landingY,
+      rot: (Math.random() - 0.5) * (Math.PI * 0.42),
+    };
+  }
+
+  function spawnRain(charData, baseIdx, opts) {
+    canvasMode = 'pour';
+    const ch = voidCanvas.offsetHeight;
+    const urgent = opts && opts.urgent;
+
+    if (prefersReducedMotion.matches) {
+      // Skip flight; settle directly into heap so reassembly source exists.
+      for (let i = 0; i < charData.length; i++) {
+        const cd = charData[i];
+        if (cd.char.trim() === '') continue;
+        const slot = pickLandingSpot();
+        heapChars.push({
+          char: cd.char, srcIdx: baseIdx + i,
+          x: slot.x, y: slot.y, rot: slot.rot, alpha: 0.94,
+        });
+      }
+      maybeStartLoop();
+      return;
+    }
+
+    // Within one release event, chars stagger their starts by a short
+    // amount so they don't all begin moving in lockstep — but no global
+    // queue, so successive release events don't pile particles up at the
+    // line position waiting their turn.
+    const now = performance.now();
+    let scheduled = 0;
     for (let i = 0; i < charData.length; i++) {
       const cd = charData[i];
       if (cd.char.trim() === '') continue;
 
-      const endY = canvasH - 60 - Math.random() * 40;
-      rainParticles.push({
-        char: cd.char,
-        x: cd.x,
-        y: cd.y,
-        totalFall: endY - cd.y,
-        xDrift: -15 + Math.random() * 30,
-        rotation: -10 + Math.random() * 20,
-        delay: delayIdx * 20 + Math.random() * 50,
-        duration: 2000 + Math.random() * 1500,
-        startTime: 0,
+      const slot = pickLandingSpot();
+      const reserved = {
+        char: cd.char, srcIdx: baseIdx + i,
+        x: slot.x, y: slot.y, rot: slot.rot, alpha: 0,
+      };
+      heapChars.push(reserved);
+
+      // Char starts at the DOM letter's exact position so the handoff is
+      // frame-perfect — DOM disappears, canvas appears at the same pixel,
+      // no fade-in. The line reflows; the released letter detaches and drifts.
+      const startX = cd.x;
+      const startY = cd.y;
+
+      const stagger = urgent
+        ? scheduled * 25 + Math.random() * 20
+        : Math.random() * 40;
+      const startAt = now + stagger;
+      scheduled++;
+
+      const duration = urgent
+        ? 1300 + Math.random() * 500
+        : 5800 + Math.random() * 1600;
+
+      fallingChars.push({
+        char: cd.char, srcIdx: baseIdx + i,
+        x0: startX, y0: startY,
+        settleX: slot.x, settleY: slot.y, settleRot: slot.rot,
+        rotStart: (Math.random() - 0.5) * (Math.PI * 0.18),
+        sway: 3 + Math.random() * 5,
+        swayPhase: Math.random() * Math.PI * 2,
+        startTime: startAt,
+        duration: duration,
+        reserved: reserved,
         dead: false,
       });
-      delayIdx++;
     }
+    maybeStartLoop();
+  }
 
-    rainAlive = rainParticles.length;
-    if (!rainLoopRunning && rainAlive > 0) {
-      rainLoopRunning = true;
-      requestAnimationFrame(animateRain);
-    }
+  function maybeStartLoop() {
+    if (rainLoopRunning) return;
+    rainLoopRunning = true;
+    requestAnimationFrame(animateRain);
   }
 
   function animateRain(now) {
@@ -1120,47 +1648,201 @@
     const cw = rainCanvas.width / dpr;
     const ch = rainCanvas.height / dpr;
     rainCtx.clearRect(0, 0, cw, ch);
+    rainCtx.font = canvasFont;
+    rainCtx.textAlign = 'center';
+    rainCtx.textBaseline = 'middle';
+    rainCtx.fillStyle = inkColor;
 
-    let alive = 0;
-    for (let i = 0; i < rainParticles.length; i++) {
-      const p = rainParticles[i];
+    // Draw the heap (static once settled)
+    for (let i = 0; i < heapChars.length; i++) {
+      const h = heapChars[i];
+      rainCtx.save();
+      rainCtx.globalAlpha = h.alpha;
+      rainCtx.translate(h.x, h.y);
+      rainCtx.rotate(h.rot);
+      rainCtx.fillText(h.char, 0, 0);
+      rainCtx.restore();
+    }
+
+    // Draw chars in flight — visible at full alpha from the moment they're
+    // spawned (no fade-in). They hold at start position until startTime,
+    // then lift, then drift on ease-in-out to the landing spot.
+    let stillFalling = 0;
+    for (let i = 0; i < fallingChars.length; i++) {
+      const p = fallingChars[i];
       if (p.dead) continue;
 
-      if (p.startTime === 0) p.startTime = now + p.delay;
-      if (now < p.startTime) { alive++; continue; }
+      let cx, cy, rotT;
 
-      const elapsed = now - p.startTime;
-      const t = Math.min(elapsed / p.duration, 1);
-      if (t >= 1) { p.dead = true; continue; }
+      if (now < p.startTime) {
+        // Held at the line position, fully visible — the letter is just
+        // about to detach. Brief (≤100ms) due to tight stagger.
+        cx = p.x0;
+        cy = p.y0;
+        rotT = 0;
+        stillFalling++;
+      } else {
+        const elapsed = now - p.startTime;
+        const t = Math.min(elapsed / p.duration, 1);
+        if (t >= 1) {
+          // Activate the reserved heap entry AND draw the char at the
+          // landing position this frame, so the heap render next frame
+          // takes over without a one-frame gap.
+          if (p.reserved) p.reserved.alpha = 0.94;
+          rainCtx.save();
+          rainCtx.globalAlpha = 0.94;
+          rainCtx.translate(p.settleX, p.settleY);
+          rainCtx.rotate(p.settleRot);
+          rainCtx.fillText(p.char, 0, 0);
+          rainCtx.restore();
+          p.dead = true;
+          continue;
+        }
+        stillFalling++;
+        rotT = t;
 
-      alive++;
-      const eased = Math.pow(t, 1.6);
+        // Pure descent — no lift. The letter detaches and immediately
+        // begins its slow drift downward on ease-in-out.
+        const eased = t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const dx = p.settleX - p.x0;
+        const dy = p.settleY - p.y0;
+        const sway = Math.sin(t * Math.PI + p.swayPhase) * p.sway;
+        cx = p.x0 + dx * eased + sway;
+        cy = p.y0 + dy * eased;
+      }
 
-      let opacity;
-      if (t < 0.06) opacity = (t / 0.06) * 0.5;
-      else if (t < 0.6) opacity = 0.5 - t * 0.15;
-      else opacity = 0.35 * (1 - (t - 0.6) / 0.4);
-      if (opacity <= 0) continue;
-
-      const cx = p.x + eased * p.xDrift;
-      const cy = p.y + eased * p.totalFall;
-      const rot = (eased * p.rotation * Math.PI) / 180;
+      const rot = p.rotStart + (p.settleRot - p.rotStart) * rotT;
 
       rainCtx.save();
-      rainCtx.globalAlpha = opacity;
+      rainCtx.globalAlpha = 0.94;
       rainCtx.translate(cx, cy);
       rainCtx.rotate(rot);
-      rainCtx.fillStyle = rainColor;
       rainCtx.fillText(p.char, 0, 0);
       rainCtx.restore();
     }
 
-    if (alive > 0) {
+    // Reassembly: chars rise straight from their heap positions to DOM
+    // target positions. The origin heap entry stays drawn until this
+    // particle actually starts moving — at that moment the heap entry is
+    // removed and the flight particle takes over from the same pixel.
+    // Frame-perfect handoff, no blank, no fade.
+    let reassembling = 0;
+    const fontFromSize = (px) => `400 ${px}px "Crimson Pro", Georgia, serif`;
+    for (let i = 0; i < reassemblyChars.length; i++) {
+      const p = reassemblyChars[i];
+      if (p.done) continue;
+      if (p.startTime === 0) p.startTime = now + p.delay;
+      if (now < p.startTime) { reassembling++; continue; }
+
+      // First frame this particle becomes active: remove its origin from
+      // the pile so the flight particle takes over without doubling.
+      if (!p.originRemoved && p.originHeap) {
+        const idx = heapChars.indexOf(p.originHeap);
+        if (idx !== -1) heapChars.splice(idx, 1);
+        p.originRemoved = true;
+      }
+
+      const elapsed = now - p.startTime;
+      const t = Math.min(elapsed / p.duration, 1);
+      if (t >= 1) {
+        if (!p.revealed && p.domEl) {
+          p.domEl.classList.add('shown');
+          p.revealed = true;
+        }
+        p.done = true;
+        continue;
+      }
+      reassembling++;
+      const eased = t * t * (3 - 2 * t);
+      const dx = p.x1 - p.x0;
+      const dy = p.y1 - p.y0;
+      const cx = p.x0 + dx * eased;
+      const cy = p.y0 + dy * eased;
+      const rot = p.rot0 * (1 - eased);
+      const sizeNow = p.size0 + (p.size1 - p.size0) * eased;
+      rainCtx.save();
+      rainCtx.globalAlpha = 0.94;
+      rainCtx.font = fontFromSize(sizeNow);
+      rainCtx.translate(cx, cy);
+      rainCtx.rotate(rot);
+      rainCtx.fillText(p.char, 0, 0);
+      rainCtx.restore();
+    }
+
+    // Compact dead lists when fully drained
+    if (stillFalling === 0 && fallingChars.length > 0) fallingChars.length = 0;
+    if (reassembling === 0 && reassemblyChars.length > 0) {
+      reassemblyChars.length = 0;
+      heapChars.length = 0;
+      // Reassembly complete — clear the canvas one more frame so heap residue is gone.
+      rainCtx.clearRect(0, 0, cw, ch);
+    }
+
+    if (stillFalling > 0 || reassembling > 0) {
       requestAnimationFrame(animateRain);
     } else {
-      rainParticles.length = 0;
       rainLoopRunning = false;
     }
+  }
+
+  function clearCanvasState() {
+    fallingChars.length = 0;
+    heapChars.length = 0;
+    reassemblyChars.length = 0;
+    canvasMode = 'pour';
+    if (rainCanvas && rainCtx) {
+      const dpr = window.devicePixelRatio || 1;
+      rainCtx.clearRect(0, 0, rainCanvas.width / dpr, rainCanvas.height / dpr);
+    }
+  }
+
+  function startReassembly(targets, sourceSize, targetSize) {
+    // targets: [{ srcIdx, x, y, char, el }]
+    // Heap chars are NOT removed here — each origin entry stays drawn at
+    // its pile position until its corresponding flight particle actually
+    // begins moving (handled in animateRain). The pile depletes letter
+    // by letter as chars rise, never blanking out.
+    canvasMode = 'reassemble';
+    const bySrc = new Map();
+    for (const h of heapChars) {
+      if (!bySrc.has(h.srcIdx)) bySrc.set(h.srcIdx, []);
+      bySrc.get(h.srcIdx).push(h);
+    }
+    const used = new Set();
+    let scheduled = 0;
+    for (let k = 0; k < targets.length; k++) {
+      const tgt = targets[k];
+      let h = null;
+      if (bySrc.has(tgt.srcIdx)) {
+        const list = bySrc.get(tgt.srcIdx);
+        for (let j = 0; j < list.length; j++) {
+          const cand = list[j];
+          if (!used.has(cand)) { h = cand; used.add(cand); break; }
+        }
+      }
+      if (!h) {
+        setTimeout(() => tgt.el && tgt.el.classList.add('shown'), 200 + k * 8);
+        continue;
+      }
+      reassemblyChars.push({
+        char: h.char,
+        x0: h.x, y0: h.y, rot0: h.rot,
+        x1: tgt.x, y1: tgt.y,
+        size0: sourceSize, size1: targetSize,
+        duration: 1300 + Math.random() * 500,
+        delay: scheduled * 5 + Math.random() * 80,
+        startTime: 0,
+        domEl: tgt.el,
+        originHeap: h,
+        originRemoved: false,
+        revealed: false,
+        done: false,
+      });
+      scheduled++;
+    }
+    maybeStartLoop();
   }
 
   // ============================================================
@@ -1178,95 +1860,84 @@
   btnDone.addEventListener('click', finishPour);
 
   // ============================================================
-  //  FINISH POUR → trigger reconstitution
+  //  FINISH POUR → settle remaining chars, then enter sift
   // ============================================================
   function finishPour() {
     if (phase !== 'pour') return;
     abortSample();
+    stopCascadeLoop();
     if (pauseTimer) clearTimeout(pauseTimer);
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
 
-    // Spawn rain for any visible (un-released) text so the typing
-    // line clears before reconstitution
-    if (!prefersReducedMotion.matches) {
-      const canvasRect = voidCanvas.getBoundingClientRect();
-      const allChars = typingDisplay.querySelectorAll('.char');
-      const charData = [];
-      allChars.forEach(c => {
-        const r = c.getBoundingClientRect();
-        charData.push({
-          char: c.textContent,
-          x: r.left - canvasRect.left + r.width / 2,
-          y: r.top - canvasRect.top + r.height / 2,
-        });
+    // Settle any visible (un-released) chars into the heap
+    const canvasRect = voidCanvas.getBoundingClientRect();
+    const allChars = typingDisplay.querySelectorAll('.char');
+    const charData = [];
+    allChars.forEach(c => {
+      const r = c.getBoundingClientRect();
+      charData.push({
+        char: c.textContent,
+        x: r.left - canvasRect.left + r.width / 2,
+        y: r.top - canvasRect.top + r.height / 2,
       });
-      spawnRain(charData);
-    }
+    });
+    if (charData.length > 0) spawnRain(charData, releasedUpTo, { urgent: true });
 
     releasedUpTo = fullText.length;
     renderTypingLine();
     hideDoneInvite();
-    sampleSkip.classList.remove('visible');
-
-    // Brief beat for rain to settle, then move to reconstitution
-    setTimeout(() => setPhase('reconstitute'), 800);
-  }
-
-  // ============================================================
-  //  RECONSTITUTION — text fades back in, then surface goes light
-  // ============================================================
-  function runReconstitution() {
-    // Build word-by-word reveal
-    reconstituteText.innerHTML = '';
-    const reveals = [];
-    const tokens = fullText.split(/(\s+)/); // keep whitespace as tokens
-
-    tokens.forEach(tok => {
-      if (tok.length === 0) return;
-      if (/^\s+$/.test(tok)) {
-        reconstituteText.appendChild(document.createTextNode(tok));
-      } else {
-        const span = document.createElement('span');
-        span.className = 'reveal-word';
-        span.textContent = tok;
-        reconstituteText.appendChild(span);
-        reveals.push(span);
-      }
-    });
+    hiddenInput.blur();
+    phaseNodes.pour.classList.add('leaving');
 
     if (prefersReducedMotion.matches) {
-      reveals.forEach(s => s.classList.add('shown'));
-      // Crossfade surface after a small beat
-      setTimeout(() => root.classList.add('surface-light'), 400);
-      // Jump to sift after a moment
-      setTimeout(() => setPhase('sift'), 1400);
+      setTimeout(() => setPhase('sift'), 200);
       return;
     }
 
-    // Stagger reveal across ~1.4s, capped at 28ms/word for long text
-    const total = reveals.length;
-    const span = Math.min(1400, Math.max(600, total * 28));
-    const step = total > 0 ? span / total : 0;
+    // Compress remaining fall time so chars in flight finish soon — they
+    // continue their natural ease-in-out, just on a shorter remaining clock.
+    // Avoids both the long wait AND a teleport-snap.
+    const expediteCap = 800;
+    const nowExp = performance.now();
+    for (const p of fallingChars) {
+      if (p.dead) continue;
+      const elapsed = Math.max(0, nowExp - p.startTime);
+      const remaining = p.duration - elapsed;
+      if (remaining > expediteCap) {
+        p.duration = elapsed + expediteCap;
+      }
+    }
 
-    reveals.forEach((s, i) => {
-      setTimeout(() => s.classList.add('shown'), i * step);
-    });
-
-    // Once all words are visible, hold for a beat, then crossfade surface
-    const fullDelay = total * step + 600;
-    setTimeout(() => {
-      root.classList.add('surface-light');
-    }, fullDelay);
-
-    // Move to sift after surface settles
-    setTimeout(() => setPhase('sift'), fullDelay + 1800);
+    // Wait until all chars have landed (cap at 1.4s for safety).
+    const start = performance.now();
+    const maxWait = 1400;
+    const minWait = 400;
+    const waitForSettle = () => {
+      const elapsed = performance.now() - start;
+      const stillInFlight = fallingChars.some(p => !p.dead);
+      if (!stillInFlight && elapsed >= minWait) {
+        setPhase('sift');
+        return;
+      }
+      if (elapsed >= maxWait) {
+        for (const p of fallingChars) {
+          if (!p.dead && p.reserved) {
+            p.reserved.alpha = 0.94;
+            p.dead = true;
+          }
+        }
+        setPhase('sift');
+        return;
+      }
+      requestAnimationFrame(waitForSettle);
+    };
+    requestAnimationFrame(waitForSettle);
   }
 
   // ============================================================
   //  INIT
   // ============================================================
   resizeRainCanvas();
-  updateChrome();
 
 })();
 </script>
