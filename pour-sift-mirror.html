@@ -336,6 +336,21 @@
     font-weight: 500;
   }
 
+  .prompt-tip {
+    display: block;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: var(--text-sm);
+    color: var(--text-on-dark-muted);
+    line-height: var(--leading-normal);
+    max-width: 52ch;
+    margin: var(--space-3) auto 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid color-mix(in srgb, var(--color-lavender) 18%, transparent);
+    letter-spacing: 0.01em;
+    font-style: italic;
+  }
+
   /* When leaving pour, hide the typing UI but keep the canvas visible
      so falling/reassembling chars stay on stage. Visibility, not opacity —
      no fades during transitions. */
@@ -749,7 +764,7 @@
 
       <div class="pour-prompt prompt-card" id="pourPrompt">
         <span class="prompt-lead">Pour It Out.</span>
-        <span class="prompt-body">Type whatever's on your mind. Stream of consciousness — don't filter or edit. Words will fall away as you write.</span>
+        <span class="prompt-body">Type the thoughts that are circling your mind as a stream of consciousness. Don’t filter or edit yourself. Witness the words wash away.</span>
       </div>
 
       <div class="typing-area" id="typingArea">
@@ -761,7 +776,7 @@
       <input type="text" class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="pour your thoughts">
 
       <div class="done-invite" id="doneInvite">
-        <button class="done-btn" id="btnDone" type="button">I'm done</button>
+        <button class="done-btn" id="btnDone" type="button">I’m done</button>
       </div>
     </div>
   </section>
@@ -772,7 +787,8 @@
   <section class="phase sift" data-phase="sift" aria-label="sift">
     <div class="sift-prompt prompt-card" id="siftPrompt">
       <span class="prompt-lead">Read It Back.</span>
-      <span class="prompt-body">Read slowly. Notice which words land in your body — a held breath, a tightened throat, a tear, a pull in your chest. <em>Tap or drag</em> across those words to mark what carries weight. Not sure where to start? Look at the adjectives and descriptive phrases — they often reveal a deeper pattern.</span>
+      <span class="prompt-body">Read slowly. Notice which words land in your body. Listen for signals like a tightened chest or throat, a tingling nose or teary eye, a heaviness. <em>Tap or drag</em> across those words or phrases to highlight their importance for the next step.</span>
+      <span class="prompt-tip">Not sure where to start? Look at the adjectives and descriptive phrases, they often reveal a deeper meaning.</span>
     </div>
     <div class="sift-lines" id="siftLines" aria-live="polite"></div>
     <div class="sift-actions">
@@ -827,7 +843,7 @@
   let doneInviteTimer = null;
   let sampleAbortController = null;
 
-  const SAMPLE_TEXT = "I can't keep up. I'm so behind and I should be further along by now. Everyone else seems fine but I feel like I'm drowning. I know it's not a big deal but I can't stop thinking about it. I'm too much. What's wrong with me.";
+  const SAMPLE_TEXT = "I can’t keep up. I’m so behind and I should be further along by now. Everyone else seems fine but I feel like I’m drowning. I know it’s not a big deal but I can’t stop thinking about it. I’m too much. What’s wrong with me.";
 
   // ============================================================
   //  DOM REFS
