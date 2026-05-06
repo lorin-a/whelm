@@ -818,6 +818,7 @@
   // were written, even when the user has stopped typing.
   const CHAR_LIFESPAN = 5000;       // ms a char lives in the line before falling
   const MIN_RELEASE_INTERVAL = 180; // ms — throttle so chars cascade smoothly, never in bursts
+  const SOFT_WIDTH_RATIO = 0.55;    // start single-char-per-tick release once line ≥ 55% of container
   const charBirths = [];        // index = global char index in fullText, value = perf.now() at type
   let cascadeIntervalId = null;
   let lastReleaseTime = 0;
@@ -1217,9 +1218,9 @@
     const ctrl = sampleAbortController;
 
     // Focus is not needed for sample — we drive value directly
-    const baseDelay = 180;
-    const variance = 80;
-    const punctPause = 500;
+    const baseDelay = 130;
+    const variance = 60;
+    const punctPause = 400;
 
     for (let i = 0; i < SAMPLE_TEXT.length; i++) {
       if (ctrl.aborted) return;
@@ -1308,11 +1309,11 @@
   }
 
   // Cascade loop runs continuously while in pour, regardless of typing.
-  // Each tick checks the oldest visible char: if its age has passed
-  // CHAR_LIFESPAN, or the line overflows the container, release it.
+  // Each tick walks the oldest chars and releases via runCascade — see
+  // its header for the hard / soft / age release paths.
   function startCascadeLoop() {
     if (cascadeIntervalId !== null) return;
-    cascadeIntervalId = setInterval(runCascade, 90);
+    cascadeIntervalId = setInterval(runCascade, 60);
   }
   function stopCascadeLoop() {
     if (cascadeIntervalId !== null) {
@@ -1354,13 +1355,17 @@
   }
 
   // ============================================================
-  //  CASCADE — time-based per-char, with width safety net
+  //  CASCADE — time-based per-char with soft + hard width thresholds
   //  Each char has a birth timestamp from when it was typed. On every
-  //  tick (~90ms), we walk chars from oldest to newest. A char releases
-  //  when EITHER its age has passed CHAR_LIFESPAN, OR the line still
-  //  overflows the container width. The age path drives continuous
-  //  cascade (line drains even when typing stops); the width path
-  //  catches paste/burst overflow before the line can grow grotesque.
+  //  tick (~90ms) we walk chars from oldest to newest and release them
+  //  via three paths, in priority order:
+  //    1. HARD overflow (line > 100% of container): unthrottled multi
+  //       release — paste/burst safety so the line never grows grotesque.
+  //    2. SOFT overflow (line ≥ SOFT_WIDTH_RATIO * container): one char
+  //       per throttle window. Steady state holds the line near the soft
+  //       threshold instead of letting it fill to 100% then dumping.
+  //    3. AGE (char older than CHAR_LIFESPAN): one char per throttle
+  //       window. Drains the line on idle even when typing stops.
   // ============================================================
   function runCascade() {
     if (isReleasing) return;
@@ -1371,24 +1376,26 @@
 
     const now = performance.now();
     const containerWidth = typingArea.getBoundingClientRect().width;
+    const softWidth = containerWidth * SOFT_WIDTH_RATIO;
     let remainingWidth = typingDisplay.getBoundingClientRect().width;
-    const ageThrottled = now - lastReleaseTime < MIN_RELEASE_INTERVAL;
+    const throttled = now - lastReleaseTime < MIN_RELEASE_INTERVAL;
 
-    // Width-based release fires unconditionally (catches paste/burst overflow).
-    // Age-based release respects MIN_RELEASE_INTERVAL so chars cascade in a
-    // smooth stream — one at a time — even if many become aged at the same tick.
     let releaseCount = 0;
+    let firedSoft = false;
     let firedAge = false;
     for (let i = 0; i < chars.length; i++) {
       const c = chars[i];
       const idx = releasedUpTo + i;
       const birth = charBirths[idx];
       const ageOld = birth !== undefined && (now - birth) >= CHAR_LIFESPAN;
-      const overflowing = remainingWidth > containerWidth;
-      if (overflowing) {
-        // always release to fix overflow
-      } else if (ageOld && !ageThrottled && !firedAge) {
-        firedAge = true; // only one age-based release per tick
+      const hardOverflow = remainingWidth > containerWidth;
+      const softOverflow = remainingWidth > softWidth;
+      if (hardOverflow) {
+        // paste/burst — unthrottled, keep dumping until the line fits
+      } else if (softOverflow && !firedSoft) {
+        firedSoft = true; // one soft release per tick (firedSoft is the throttle)
+      } else if (ageOld && !throttled && !firedAge) {
+        firedAge = true;  // one age release per tick, throttled
       } else {
         break;
       }
@@ -1485,7 +1492,7 @@
     // Initial pick: gaussian around center with band widening as pile grows.
     const center = cw / 2;
     const fillFactor = Math.min(1, heapChars.length / 90);
-    const bandHalf = Math.min(cw * 0.40, 280) * (0.35 + 0.65 * fillFactor);
+    const bandHalf = Math.min(cw * 0.70, 520) * (0.35 + 0.65 * fillFactor);
     const gauss = (Math.random() + Math.random() + Math.random() - 1.5) * 0.7;
     let targetX = center + gauss * bandHalf;
     let landingY = computeY(targetX);
@@ -1655,11 +1662,10 @@
         stillFalling++;
         rotT = t;
 
-        // Pure descent — no lift. The letter detaches and immediately
-        // begins its slow drift downward on ease-in-out.
-        const eased = t < 0.5
-          ? 4 * t * t * t
-          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        // Pure descent at constant velocity — paper drifting on still air.
+        // Linear progress + sin sway gives organic motion without the
+        // pause-at-top that ease-in-out introduces.
+        const eased = t;
         const dx = p.settleX - p.x0;
         const dy = p.settleY - p.y0;
         const sway = Math.sin(t * Math.PI + p.swayPhase) * p.sway;
