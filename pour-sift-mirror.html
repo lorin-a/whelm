@@ -718,6 +718,92 @@
     outline-offset: 2px;
   }
 
+  /* Mirror chrome (title + tangle) starts hidden when the phase enters
+     mid-transition; the JS reveals it during the cluster beat so pills
+     converge over a tangle that's just becoming visible. */
+  .mirror.entering .mirror-title,
+  .mirror.entering .tangle-svg {
+    opacity: 0;
+  }
+  .mirror-title,
+  .tangle-svg {
+    transition: opacity var(--dur-settle) var(--ease-calm);
+  }
+
+  /* ============================================================
+     TRANSITION STAGE — pills lift out of sift on a fixed-position
+     overlay so they survive the phase swap from sift → mirror. Each
+     pill morphs from sift-word styling to portrait-pill styling
+     while moving through three beats: in-place promote, cluster,
+     orbit.
+     ============================================================ */
+  .transition-stage {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+  }
+
+  .transition-pill {
+    position: fixed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-subhead);
+    font-size: var(--text-lg);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: normal;
+    color: var(--color-haze);
+    background: color-mix(in srgb, var(--color-amethyst) 55%, transparent);
+    border: 0 solid var(--text-on-dark);
+    padding: 4px 6px;
+    border-radius: 6px 4px 7px 5px;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    will-change: left, top, border-width, padding, font-size;
+    transition:
+      border-width var(--dur-soft) var(--ease-glide),
+      background-color var(--dur-soft) var(--ease-glide),
+      color var(--dur-soft) var(--ease-glide),
+      padding var(--dur-soft) var(--ease-glide),
+      border-radius var(--dur-soft) var(--ease-glide),
+      font-size var(--dur-soft) var(--ease-glide),
+      letter-spacing var(--dur-soft) var(--ease-glide),
+      left var(--dur-settle) var(--ease-calm),
+      top var(--dur-settle) var(--ease-calm);
+  }
+
+  .transition-pill.is-pill {
+    font-family: var(--font-body);
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
+    border: 2px solid var(--text-on-dark);
+    background: color-mix(in srgb, var(--color-deep) 70%, transparent);
+    color: var(--text-on-dark);
+    padding: var(--space-3) var(--space-5);
+    border-radius: 44px;
+  }
+
+  /* Hide the marked sift-word once its transition pill is in flight, so
+     the same text doesn't render twice. Color, not display, so the line
+     layout doesn't reflow and unmarked-word fade still tracks. */
+  .sift-word.lifted {
+    color: transparent;
+    background: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .transition-pill {
+      transition: none;
+    }
+    .mirror-title,
+    .tangle-svg {
+      transition: none;
+    }
+  }
+
   /* ============================================================
      RESPONSIVE
      ============================================================ */
@@ -802,11 +888,13 @@
   <section class="phase mirror" data-phase="mirror" aria-label="mirror">
     <h2 class="mirror-title">Your Tangle:</h2>
     <div class="portrait-stage" id="portraitStage">
-      <img class="tangle-svg" src="public/brand/New Tangle.svg" alt="" aria-hidden="true">
+      <img class="tangle-svg" src="public/brand/Personal Tangle.svg" alt="" aria-hidden="true">
       <div class="portrait-pills" id="portraitPills"></div>
     </div>
     <button class="mirror-restart" type="button" id="mirrorRestart">Begin again</button>
   </section>
+
+  <div class="transition-stage" id="transitionStage" aria-hidden="true"></div>
 
 </div>
 
@@ -865,6 +953,7 @@
   const siftPrompt      = document.getElementById('siftPrompt');
   const siftLines       = document.getElementById('siftLines');
   const siftDone        = document.getElementById('siftDone');
+  const transitionStage = document.getElementById('transitionStage');
 
   let siftSelections = new Set();
 
@@ -943,6 +1032,9 @@
     siftDone.classList.remove('visible');
     phaseNodes.sift.classList.remove('blackout', 'intro-shown');
     if (portraitPills) portraitPills.innerHTML = '';
+    if (transitionStage) transitionStage.innerHTML = '';
+    abortTransition();
+    phaseNodes.mirror.classList.remove('entering');
     if (doneInviteTimer) clearTimeout(doneInviteTimer);
     renderTypingLine();
     setPhase('entry');
@@ -1115,12 +1207,28 @@
   siftLines.addEventListener('pointerup', endSiftDrag);
   siftLines.addEventListener('pointercancel', endSiftDrag);
 
+  // Track in-flight transition timers so resetAll can cancel a mid-run
+  // choreography without leaving stale pills or phase classes behind.
+  let transitionTimers = [];
+  function scheduleTransition(fn, delay) {
+    const id = setTimeout(() => {
+      transitionTimers = transitionTimers.filter(t => t !== id);
+      fn();
+    }, delay);
+    transitionTimers.push(id);
+    return id;
+  }
+  function abortTransition() {
+    transitionTimers.forEach(id => clearTimeout(id));
+    transitionTimers = [];
+  }
+
   function runBlackout() {
     if (phase !== 'sift') return;
 
-    // Capture marked word DOM rects BEFORE the unmarked words fade away —
-    // so the portrait pills can FLIP-animate from these starting positions
-    // into the mirror layout.
+    // Group selected words into consecutive-run phrases. Capture each
+    // phrase's union rect (viewport coords) so the transition pill can
+    // start exactly where the marked text sits.
     const sortedIds = [...siftSelections].sort((a, b) => a - b);
     const phrases = [];
     let current = null;
@@ -1137,7 +1245,6 @@
         phrases.push(current);
       }
     });
-    // Combine consecutive marks into a single phrase pill, with a union rect.
     phrases.forEach(p => {
       p.text = p.parts.map(part => part.text).join(' ');
       const minLeft = Math.min(...p.parts.map(part => part.rect.left));
@@ -1148,81 +1255,133 @@
       p.startCenterY = (minTop + maxBottom) / 2;
     });
 
+    // Begin the unmarked-word color fade now (parallel to promotions).
     phaseNodes.sift.classList.add('blackout');
-    const delay = prefersReducedMotion.matches ? 200 : 1600;
-    setTimeout(() => {
+
+    // Hide the marked sift-words so the transition pills (rendered on a
+    // fixed-position overlay) don't double-render the same text in place.
+    siftLines.querySelectorAll('.sift-word.marked').forEach(btn => {
+      btn.classList.add('lifted');
+    });
+
+    // Spawn a transition pill at each captured phrase position.
+    phrases.forEach(p => {
+      const pill = document.createElement('span');
+      pill.className = 'transition-pill';
+      pill.textContent = p.text;
+      pill.style.left = p.startCenterX + 'px';
+      pill.style.top = p.startCenterY + 'px';
+      transitionStage.appendChild(pill);
+      p.pill = pill;
+    });
+
+    if (phrases.length === 0) {
+      // Nothing to gather — still navigate so resetAll has a clean exit.
       setPhase('mirror');
-      buildPortrait(phrases);
-    }, delay);
+      return;
+    }
+
+    if (prefersReducedMotion.matches) {
+      // Skip choreography. Phase swap, then place pills at orbit targets.
+      setPhase('mirror');
+      requestAnimationFrame(() => {
+        computeOrbitPositions(phrases);
+        phrases.forEach(p => {
+          p.pill.classList.add('is-pill');
+          p.pill.style.left = p.orbitX + 'px';
+          p.pill.style.top = p.orbitY + 'px';
+        });
+      });
+      return;
+    }
+
+    // ---- Choreography timing -------------------------------------------
+    // BEAT 1 — staggered promote: each pill draws on its border in place.
+    // BEAT 2 — cluster: all pills slide to a tight grouping at viewport
+    //          center; mirror chrome (tangle + title) crossfades in
+    //          beneath them mid-cluster.
+    // BEAT 3 — orbit: pills spread from the cluster onto an ellipse
+    //          around the now-visible tangle.
+    const STAGGER       = 180;  // ms between successive pill promotions
+    const MORPH_DUR     = 420;  // matches --dur-soft (border-draw window)
+    const CLUSTER_DUR   = 1100; // pills sliding to center
+    const CLUSTER_DWELL = 250;  // hold at cluster before expanding
+    const POST_MORPH    = 220;  // breath after last morph before cluster
+    const PHASE_SWAP_IN_CLUSTER = 400; // when to swap sift→mirror
+
+    const lastMorphStart = (phrases.length - 1) * STAGGER;
+    const clusterStart   = lastMorphStart + MORPH_DUR + POST_MORPH;
+    const phaseSwapAt    = clusterStart + PHASE_SWAP_IN_CLUSTER;
+    const orbitStart     = clusterStart + CLUSTER_DUR + CLUSTER_DWELL;
+
+    // BEAT 1 — stagger promote
+    phrases.forEach((p, i) => {
+      scheduleTransition(() => {
+        p.pill.classList.add('is-pill');
+      }, i * STAGGER);
+    });
+
+    // BEAT 2 — cluster
+    scheduleTransition(() => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const radius = Math.min(96, window.innerWidth * 0.13);
+      phrases.forEach((p, i) => {
+        const angle = (i / phrases.length) * Math.PI * 2 + Math.random() * 0.4;
+        const r = radius * (0.25 + Math.random() * 0.75);
+        p.pill.style.left = (cx + Math.cos(angle) * r) + 'px';
+        p.pill.style.top  = (cy + Math.sin(angle) * r * 0.85) + 'px';
+      });
+    }, clusterStart);
+
+    // BEAT 2.5 — phase swap. Mirror enters with chrome opacity 0; remove
+    // .entering on the next frames so the title/tangle fade up while the
+    // cluster is settling underneath them.
+    scheduleTransition(() => {
+      phaseNodes.mirror.classList.add('entering');
+      setPhase('mirror');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        phaseNodes.mirror.classList.remove('entering');
+      }));
+    }, phaseSwapAt);
+
+    // BEAT 3 — orbit. Compute positions from the now-active portrait-stage
+    // (viewport coords) and slide pills to their orbit slots.
+    scheduleTransition(() => {
+      computeOrbitPositions(phrases);
+      phrases.forEach(p => {
+        p.pill.style.left = p.orbitX + 'px';
+        p.pill.style.top = p.orbitY + 'px';
+      });
+    }, orbitStart);
   }
 
   // ============================================================
-  //  PORTRAIT — build pills from selected phrases, position
-  //  them around the central tangle, and FLIP-animate from the
-  //  marks' original sift positions into the new layout.
+  //  ORBIT GEOMETRY — distribute phrases on an ellipse around the
+  //  centered tangle. Coordinates are viewport-relative since pills
+  //  live on a fixed-position transition stage.
   // ============================================================
   const portraitStage = document.getElementById('portraitStage');
   const portraitPills = document.getElementById('portraitPills');
   const mirrorRestart = document.getElementById('mirrorRestart');
   if (mirrorRestart) mirrorRestart.addEventListener('click', resetAll);
 
-  function buildPortrait(phrases) {
-    portraitPills.innerHTML = '';
-    if (!phrases || phrases.length === 0) return;
-
+  function computeOrbitPositions(phrases) {
     const stageRect = portraitStage.getBoundingClientRect();
-    const cx = stageRect.width / 2;
-    const cy = stageRect.height / 2;
+    const cx = stageRect.left + stageRect.width / 2;
+    const cy = stageRect.top + stageRect.height / 2;
     const rx = stageRect.width * 0.36;
     const ry = stageRect.height * 0.34;
     const N = phrases.length;
     const angleOffset = -Math.PI / 2; // start at top
-
     phrases.forEach((p, i) => {
-      const pill = document.createElement('span');
-      pill.className = 'portrait-pill';
-      pill.textContent = p.text;
-      portraitPills.appendChild(pill);
-
-      // Distribute around an ellipse with a small organic jitter so
-      // pills don't sit on a perfectly-mechanical orbit.
       const baseAngle = angleOffset + (i / N) * Math.PI * 2;
       const jitterAngle = (Math.random() - 0.5) * (Math.PI / N) * 0.4;
       const jitterR = 0.92 + Math.random() * 0.16;
       const angle = baseAngle + jitterAngle;
-      const targetX = cx + Math.cos(angle) * rx * jitterR;
-      const targetY = cy + Math.sin(angle) * ry * jitterR;
-
-      pill.style.left = targetX + 'px';
-      pill.style.top = targetY + 'px';
-      p.pill = pill;
-      p.targetX = targetX;
-      p.targetY = targetY;
+      p.orbitX = cx + Math.cos(angle) * rx * jitterR;
+      p.orbitY = cy + Math.sin(angle) * ry * jitterR;
     });
-
-    if (prefersReducedMotion.matches) return; // already at final positions
-
-    // FLIP: read final positions, set initial transforms to start at the
-    // sift-word locations, then transition back to translate(-50%, -50%).
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const stageRectNow = portraitStage.getBoundingClientRect();
-      phrases.forEach(p => {
-        const pillRect = p.pill.getBoundingClientRect();
-        const pillCenterX = pillRect.left + pillRect.width / 2;
-        const pillCenterY = pillRect.top + pillRect.height / 2;
-        const dx = p.startCenterX - pillCenterX;
-        const dy = p.startCenterY - pillCenterY;
-        p.pill.style.transition = 'none';
-        p.pill.style.transform =
-          `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-      });
-      portraitPills.offsetHeight; // force reflow
-      phrases.forEach(p => {
-        p.pill.style.transition =
-          'transform var(--dur-settle) var(--ease-calm)';
-        p.pill.style.transform = 'translate(-50%, -50%)';
-      });
-    }));
   }
 
   // ============================================================
